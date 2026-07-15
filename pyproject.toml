@@ -1,0 +1,52 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "veracode-dast-sdk"
+version = "0.1.0"
+description = "Reusable Python SDK for the Veracode DAST REST API."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Andres Jaimes" }]
+keywords = ["veracode", "dast", "sdk", "security", "api-client"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Typing :: Typed",
+]
+dependencies = [
+    "requests>=2.31",
+    "veracode-api-signing>=23.4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+    "mypy>=1.10",
+]
+
+[project.urls]
+Repository = "https://github.com/andresjaimes/veracode-dast-sdk"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/veracode_dast_sdk"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["veracode_dast_sdk"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
