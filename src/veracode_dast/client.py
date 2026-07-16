@@ -29,6 +29,7 @@ from veracode_dast.exceptions import (
     VeracodeTimeoutError,
     VeracodeValidationError,
 )
+from veracode_dast.services.targets import TARGET_CONFIGURATION_SERVICE_BASE_URL, TargetsService
 from veracode_dast.services.teams import ADMIN_API_BASE_URL, TeamService
 
 logger = logging.getLogger(__name__)
@@ -312,3 +313,6 @@ class VeracodeClient:
         """
         auth = get_veracode_auth()
         self.teams = TeamService(HttpClient(base_url=ADMIN_API_BASE_URL, auth=auth))
+        self.targets = TargetsService(
+            HttpClient(base_url=TARGET_CONFIGURATION_SERVICE_BASE_URL, auth=auth)
+        )

@@ -140,3 +140,38 @@ class TeamNotFoundError(VeracodeSDKError):
         """
         self.name = name
         super().__init__(f"No team found with name: {name}")
+
+
+class TargetValidationError(VeracodeSDKError):
+    """Raised for SDK-level Target Management parameter validation failures.
+
+    Attributes:
+        rule: A short identifier of which validation rule failed.
+    """
+
+    def __init__(self, message: str, *, rule: str) -> None:
+        """Initializes the error.
+
+        Args:
+            message: A human-readable description of the failure.
+            rule: A short identifier of which validation rule failed.
+        """
+        self.rule = rule
+        super().__init__(message)
+
+
+class TargetNotFoundError(VeracodeSDKError):
+    """Raised when no Target matches a `get_by_name`/`update_by_name` lookup.
+
+    Attributes:
+        name: The target name that was searched for.
+    """
+
+    def __init__(self, name: str) -> None:
+        """Initializes the error.
+
+        Args:
+            name: The target name that was searched for.
+        """
+        self.name = name
+        super().__init__(f"No target found with name: {name}")
