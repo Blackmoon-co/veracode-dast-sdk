@@ -12,7 +12,13 @@ Usage:
 import argparse
 
 from veracode_dast.client import VeracodeClient
-from veracode_dast.models.target import Protocol, ScanType, TargetCreate, TargetType
+from veracode_dast.models.target import (
+    Protocol,
+    ScanType,
+    TargetCreate,
+    TargetType,
+    TargetUpdate,
+)
 
 
 def main() -> None:
@@ -28,20 +34,30 @@ def main() -> None:
     team = client.teams.get_by_name(args.team_name)
     print(f"Resolved team: {team}")
 
-    target = client.targets.create(
+    spec_url = f"https://{args.target_url}/openapi.yaml"
+    target = client.targets.ensure(
         TargetCreate(
             name=args.target_name,
             url=args.target_url,
             protocol=Protocol.HTTPS,
             target_type=TargetType.API,
-            scan_type=ScanType.QUICK,
+            scan_type=ScanType.FULL,
             authorized_to_scan=True,
             is_sec_lead_only=False,
             teams=[team.team_id],
-            api_specification_file_url=f"https://{args.target_url}/openapi.yaml",
+            api_specification_file_url=spec_url,
         )
     )
-    print(f"Created target: {target}")
+    target = client.targets.update_by_name(
+        args.target_name,
+        TargetUpdate(
+            url=args.target_url,
+            protocol=Protocol.HTTPS,
+            api_specification_file_url=spec_url,
+            teams=[team.team_id],
+        ),
+    )
+    print(f"Target ready: {target}")
 
     client.api_specifications.upload(target.target_id, args.spec_file)
     spec = client.api_specifications.get(target.target_id)
