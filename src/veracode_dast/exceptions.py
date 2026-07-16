@@ -105,3 +105,38 @@ class VeracodeConflictError(VeracodeApiError):
 
 class VeracodeValidationError(VeracodeApiError):
     """Raised for HTTP responses with status code 422."""
+
+
+class TeamValidationError(VeracodeSDKError):
+    """Raised for SDK-level Team Management parameter validation failures.
+
+    Attributes:
+        rule: A short identifier of which validation rule failed.
+    """
+
+    def __init__(self, message: str, *, rule: str) -> None:
+        """Initializes the error.
+
+        Args:
+            message: A human-readable description of the failure.
+            rule: A short identifier of which validation rule failed.
+        """
+        self.rule = rule
+        super().__init__(message)
+
+
+class TeamNotFoundError(VeracodeSDKError):
+    """Raised when no Team matches a `get_by_name` lookup.
+
+    Attributes:
+        name: The team name that was searched for.
+    """
+
+    def __init__(self, name: str) -> None:
+        """Initializes the error.
+
+        Args:
+            name: The team name that was searched for.
+        """
+        self.name = name
+        super().__init__(f"No team found with name: {name}")

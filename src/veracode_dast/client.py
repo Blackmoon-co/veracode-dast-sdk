@@ -18,6 +18,7 @@ from requests.adapters import HTTPAdapter
 from requests.auth import AuthBase
 from urllib3.util.retry import Retry
 
+from veracode_dast.auth import get_veracode_auth
 from veracode_dast.exceptions import (
     VeracodeApiError,
     VeracodeAuthenticationError,
@@ -28,6 +29,7 @@ from veracode_dast.exceptions import (
     VeracodeTimeoutError,
     VeracodeValidationError,
 )
+from veracode_dast.services.teams import ADMIN_API_BASE_URL, TeamService
 
 logger = logging.getLogger(__name__)
 
@@ -291,3 +293,22 @@ class HttpClient:
                 status_code=response.status_code,
                 response_body=response.text,
             ) from exc
+
+
+class VeracodeClient:
+    """Public SDK entry point, exposing one attribute per Veracode resource.
+
+    Reads credentials from the environment once (via `get_veracode_auth()`)
+    and reuses the resulting auth provider across every Veracode API
+    domain this SDK talks to.
+    """
+
+    def __init__(self) -> None:
+        """Initializes every configured service.
+
+        Raises:
+            MissingCredentialsError: If required credential environment
+                variables are unset or empty.
+        """
+        auth = get_veracode_auth()
+        self.teams = TeamService(HttpClient(base_url=ADMIN_API_BASE_URL, auth=auth))
