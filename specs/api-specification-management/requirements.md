@@ -62,10 +62,12 @@ the request body.
 
 - 200 → `ApiSpec` (metadata of the newly uploaded spec).
 - 400 → `Problem` ("Veracode could not validate your API specification
-  file") — this is a **server-side validation failure**, propagated
-  unchanged as `VeracodeApiError`/`VeracodeValidationError` per the HTTP
-  Client's status mapping; this feature never tries to replicate Veracode's
-  spec-content validation.
+  file") — this is a **server-side validation failure**. 400 is not one of
+  the HTTP Client's specifically-mapped status codes (only 401/403/404/
+  409/422 are — see
+  [http-client/design.md §4](../http-client/design.md#4-error-handling)),
+  so it propagates unchanged as the base `VeracodeApiError`; this feature
+  never tries to replicate Veracode's spec-content validation.
 - 401/403 → no body.
 - 501 → `Problem`.
 
@@ -154,8 +156,9 @@ never wraps them (README "Error Handling").
      validated as JSON/YAML by the SDK (README "Validation
      Responsibilities": never duplicate server-side validation).
 1.5. On success (200), returns `ApiSpecification.from_api(response.data)`.
-1.6. A 400 (Veracode rejects the file content) propagates as
-     `VeracodeValidationError`, unchanged, per §0.3.
+1.6. A 400 (Veracode rejects the file content) propagates as the base
+     `VeracodeApiError`, unchanged, per §0.3 — 400 has no more specific
+     mapped exception class.
 1.7. This feature never creates, checks for, or assumes the existence of a
      Target beyond letting a 404 from the HTTP Client propagate naturally
      (README "Responsibilities": "not responsible for... validating Target

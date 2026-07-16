@@ -175,3 +175,39 @@ class TargetNotFoundError(VeracodeSDKError):
         """
         self.name = name
         super().__init__(f"No target found with name: {name}")
+
+
+class ApiSpecificationValidationError(VeracodeSDKError):
+    """Raised for SDK-level API Specification parameter validation failures.
+
+    Attributes:
+        rule: A short identifier of which validation rule failed.
+    """
+
+    def __init__(self, message: str, *, rule: str) -> None:
+        """Initializes the error.
+
+        Args:
+            message: A human-readable description of the failure.
+            rule: A short identifier of which validation rule failed.
+        """
+        self.rule = rule
+        super().__init__(message)
+
+
+class ApiSpecificationFileNotFoundError(VeracodeSDKError):
+    """Raised when `upload()`'s local file path does not exist.
+
+    Attributes:
+        path: The file path that was not found.
+    """
+
+    def __init__(self, message: str, *, path: str) -> None:
+        """Initializes the error.
+
+        Args:
+            message: A human-readable description of the failure.
+            path: The file path that was not found.
+        """
+        self.path = path
+        super().__init__(message)
