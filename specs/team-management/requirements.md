@@ -125,15 +125,18 @@ account before finalizing that piece of code (tasks.md).
 
 ### 0.3 Not independently confirmed (treated conservatively below)
 
-- **Exact pagination metadata shape.** `page`/`size` as request query
-  parameters, and the `_embedded.teams` response array, are confirmed.
-  No test script in the collection ever reads a page-metadata object
-  (e.g. total-pages/total-elements-style fields) — every script only
-  iterates `response._embedded.teams`. The exact JSON key names and
-  casing of that metadata (e.g. whether it matches Target Management's
-  snake_case `total_pages`/`total_elements`, or uses different
-  casing/names) remain unconfirmed by any source, including the
-  collection.
+- ~~**Exact pagination metadata shape.**~~ **Resolved during
+  implementation** via a live probe of `GET /teams?size=5` against a real
+  account: the `page` object is `{"size": int, "total_elements": int,
+  "total_pages": int, "number": int}` — the identical key set (and
+  casing) to Target Management's `PagedTargets.page`. `TeamPage` uses the
+  same `page_number`/`page_size`/`total_pages`/`total_elements` attribute
+  names as `TargetPage` (design.md §2.1). The same probe also showed a
+  real team object carries additional fields this SDK does not model
+  (`business_unit`, `organization`, `member_only`, `scim_team`,
+  `team_legacy_id`, `_links`), confirming `Team.from_api`'s
+  "ignore unrecognized extra keys" behavior (§5.2) is required, not
+  speculative.
 - **Whether the `team_name` filter is case-sensitive, or matches
   substrings only, or also matches on other fields.** The collection's
   own description says "containing name," but the saved example request

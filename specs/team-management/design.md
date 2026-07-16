@@ -89,23 +89,34 @@ class TeamPage:
     """One page of `GET /teams` results.
 
     `items` is confirmed (requirements.md §0.2 — the HAL `_embedded.teams`
-    shape). Page-metadata attributes are deliberately NOT enumerated in
-    this design: the exact JSON key names/casing of `GET /teams`'s
-    page-metadata object are not confirmed (requirements.md §0.3), and
-    `TargetPage`'s shape (`page_number`/`page_size`/`total_pages`/
-    `total_elements`) is not assumed to carry over — the Admin API is a
-    different service than the DAST Target Configuration Service and may
-    not share its casing/naming. Freezing specific attribute names here,
-    before that's known, would design against a shape that might not
-    match the real API. The exact metadata attributes this class exposes
-    are decided in implementation, once task 1 (tasks.md) confirms the
-    live shape; only `items` is fixed by this design.
+    shape). **Resolved** (was previously open, requirements.md §0.3): a
+    live `GET /teams` call was probed during implementation and returned
+    `page: {"size": 5, "total_elements": 4, "total_pages": 1, "number": 0}`
+    — the exact same key names as `PagedTargets.page` in the DAST Target
+    Configuration Service (`number`, `size`, `total_pages`,
+    `total_elements`). `TargetPage`'s attribute naming
+    (`page_number`/`page_size`/`total_pages`/`total_elements`) therefore
+    does carry over safely; this was not assumed in advance, but is now
+    confirmed rather than guessed.
+
+    The same live response also confirmed `Team.from_api`'s "ignore
+    unrecognized extra keys" design was necessary, not defensive
+    over-engineering: real team objects also carry `business_unit`,
+    `organization`, `member_only`, `scim_team`, `team_legacy_id`, and
+    `_links` — none of which this SDK models (requirements.md §0.2/§5.2).
     """
 
     items: list[Team]
+    page_number: int
+    page_size: int
+    total_pages: int
+    total_elements: int
 
     @classmethod
-    def from_api(cls, data: dict[str, Any]) -> "TeamPage": ...
+    def from_api(cls, data: dict[str, Any]) -> "TeamPage":
+        """Reads `_embedded.teams` and `page.{number,size,total_pages,
+        total_elements}` — the same mapping `TargetPage.from_api` uses."""
+        ...
 ```
 
 **Why frozen dataclasses, not Pydantic/attrs:** same rationale as

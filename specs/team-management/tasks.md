@@ -20,10 +20,12 @@ approved.
         `POST /teams` (create) body requires only `team_name`, and every
         script that reads a team object reads only `team_id`/`team_name`
         (requirements.md §0.2). No other field is modeled.
-  - [ ] 1.1 Against a live Veracode account (or a captured real response),
-        confirm the exact JSON key names/casing of `GET /teams`'s
-        page-metadata object — still open; no test script in the
-        collection reads this object (requirements.md §0.3)
+  - [x] ~~1.1 Against a live Veracode account (or a captured real
+        response), confirm the exact JSON key names/casing of `GET
+        /teams`'s page-metadata object~~ — resolved: a live probe
+        returned `page: {"size", "total_elements", "total_pages",
+        "number"}`, identical to `PagedTargets.page` (requirements.md
+        §0.3, design.md §2.1)
   - [ ] 1.2 Confirm the `team_name` filter's exact matching algorithm
         (case sensitivity; substring-only vs. also matching other
         fields) against a live account — still open (requirements.md
