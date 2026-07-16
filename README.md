@@ -14,6 +14,26 @@ script, a CI/CD pipeline (Azure DevOps today, anything else tomorrow), or any
 other Python codebase — without any platform-specific dependency baked into
 the SDK itself.
 
+## What it talks to
+
+`VeracodeClient` wires up one `HttpClient` per underlying Veracode REST API,
+and exposes one attribute per resource on top of it:
+
+| `VeracodeClient` attribute | Veracode API                            | Base URL                                        |
+| -------------------------- | ---------------------------------------- | ------------------------------------------------ |
+| `client.teams`              | Admin API                                | `https://api.veracode.com/api/authn/v2`          |
+| `client.targets`             | DAST Target Configuration Service        | `https://api.veracode.com/dae/api/tcs-api/api/v1` |
+| `client.api_specifications`  | DAST Target Configuration Service        | `https://api.veracode.com/dae/api/tcs-api/api/v1` |
+
+- **Team Management** (`client.teams`) — read-only lookup, used to resolve a
+  team name to the `team_id` a Target is assigned to.
+- **Target Management** (`client.targets`) — CRUD for DAST Targets (the
+  scanned application/API), plus idempotent `ensure`/`update_by_name`/`exists`
+  helpers for pipelines.
+- **API Specification Management** (`client.api_specifications`) — upload,
+  fetch metadata for, and download the OpenAPI/Postman/HAR file backing an
+  `API`-type Target.
+
 ## Requirements
 
 - Python 3.11+
@@ -68,6 +88,27 @@ client.targets.delete(target.target_id)  # teardown, e.g. on environment destroy
 `ensure()` never updates an existing target's fields — it only creates when
 absent. Use `update_by_name()` explicitly when a pipeline needs to change a
 previously-provisioned target's configuration.
+
+## Examples
+
+Runnable scripts in [examples/](examples/), from lowest-level to a full
+workflow. Each requires `VERACODE_API_KEY_ID` / `VERACODE_API_KEY_SECRET`:
+
+| Script | What it shows |
+| --- | --- |
+| [`auth_example.py`](examples/auth_example.py) | Builds the HMAC auth provider from the environment. |
+| [`http_client_example.py`](examples/http_client_example.py) | One raw authenticated `GET` via `HttpClient`, no typed models. |
+| [`team_management_example.py`](examples/team_management_example.py) | Resolves a Team by name to its `team_id`. |
+| [`target_management_example.py`](examples/target_management_example.py) | Full Target lifecycle: `ensure` → `update_by_name` → `delete`. |
+| [`api_specification_management_example.py`](examples/api_specification_management_example.py) | Upload, get metadata, and download an API Specification for an existing Target. |
+| [`end_to_end_workflow_example.py`](examples/end_to_end_workflow_example.py) | The full Phase 1 flow in one script: resolve a Team, `ensure`/update a Target, upload its spec, read the spec back — output as JSON. |
+
+```bash
+python examples/end_to_end_workflow_example.py \
+  --team-name "Development" --target-name "My API" \
+  --target-url api.example.com --spec-file examples/sample-openapi.yaml \
+  --target-type API --scan-type ENTERPRISE
+```
 
 ## Authentication (Phase 1)
 
