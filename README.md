@@ -41,7 +41,7 @@ export VERACODE_API_KEY_SECRET="..."
 ## Project layout
 
 ```
-src/veracode_dast_sdk/   SDK source (src layout)
+src/veracode_dast/       SDK source (src layout)
   services/               One module per API resource (targets, ...)
   models/                 Typed data models for API resources
 tests/                    Test suite (pytest)

@@ -1,0 +1,6064 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Veracode DAST Target Configuration Service API",
+    "description": "Veracode DAST Target Configuration Service API Documentation\nUse one of the following base URLs depending on the region for your account:\n\n  • https://api.veracode.com/ - Veracode US Region (default)\n  • https://api.veracode.eu/ - Veracode European Region\n",
+    "contact": {
+      "email": "veracode@veracode.com"
+    },
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.veracode.com/dae/api/tcs-api/api/v1"
+    }
+  ],
+  "tags": [
+    {
+      "name": "target",
+      "description": "Create, update, delete, and retrieve targets."
+    },
+    {
+      "name": "analysis_profile",
+      "description": "Retrieve and update analysis profiles. \nAnalysis profiles define the configurations for your analyses.\n"
+    },
+    {
+      "name": "authentication",
+      "description": "Retrieve and update authentication options that targets use to access URLs.\n"
+    },
+    {
+      "name": "analysis_profile_scanners",
+      "description": "Retrieve and update scanner configuration options.\n"
+    },
+    {
+      "name": "crawl_configuration",
+      "description": "Retrieve and update crawl configuration options.\n"
+    },
+    {
+      "name": "scanner_variables",
+      "description": "Create, update, delete, and retrieve scanner variables.\n"
+    },
+    {
+      "name": "ism_gateway",
+      "description": "Retrieve and update ISM configuration options.\n"
+    },
+    {
+      "name": "schedule",
+      "description": "Create, update, delete, and retrieve schedules that define when to run analyses.\n"
+    },
+    {
+      "name": "analysis_run",
+      "description": "Run analyses and retrieve the results.\n"
+    },
+    {
+      "name": "discovered_target",
+      "description": "Retrieve and update discovered targets.\n"
+    },
+    {
+      "name": "applications",
+      "description": "Retrieve applications.\n"
+    }
+  ],
+  "paths": {
+    "/targets": {
+      "get": {
+        "tags": [
+          "target"
+        ],
+        "summary": "Return a list of all targets.\n",
+        "description": "Return a list of all targets.\n",
+        "operationId": "getTargets",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number index to start pagination.",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of records to return from pagination.",
+            "required": false,
+            "schema": {
+              "maximum": 200,
+              "minimum": 10,
+              "type": "integer",
+              "default": 10
+            }
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SortBy"
+            }
+          },
+          {
+            "name": "sort_order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SortOrder"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Filter by the target name.",
+            "required": false,
+            "schema": {
+              "maxLength": 255,
+              "minLength": 1,
+              "pattern": "^[ -~]+$",
+              "type": "string",
+              "example": "target name"
+            }
+          },
+          {
+            "name": "url",
+            "in": "query",
+            "description": "Filter by the target URL.",
+            "required": false,
+            "schema": {
+              "maxLength": 1000,
+              "minLength": 1,
+              "pattern": "^[ -~]+$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "search_term",
+            "in": "query",
+            "description": "Filter by the target name or target URL.",
+            "required": false,
+            "schema": {
+              "maxLength": 1000,
+              "minLength": 1,
+              "pattern": "^[ -~]+$",
+              "type": "string",
+              "example": "search term"
+            }
+          },
+          {
+            "name": "target_type",
+            "in": "query",
+            "description": "Filter by the target type. Can be web application or API target.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "WEB_APP",
+                "API"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. The target list is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedTargets"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "target"
+        ],
+        "summary": "Create a target for the specified account.\n",
+        "description": "Create a target for the specified account.\n",
+        "operationId": "createTarget",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TargetRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "You have successfully submitted your target. The URL of the new target is in the HTTP response header",
+            "headers": {
+              "location": {
+                "description": "Link to the newly created target.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Target"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem400Response"
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "501": {
+            "description": "Server-side error. Please try again later.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/targets/{target_id}": {
+      "get": {
+        "tags": [
+          "target"
+        ],
+        "summary": "Return the target for the provided target ID.\n",
+        "description": "Return the target for the provided target ID.\n",
+        "operationId": "getTargetById",
+        "parameters": [
+          {
+            "name": "target_id",
+            "in": "path",
+            "description": "ID of the target.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. The target is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Target"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "403": {
+            "description": "Forbidden access to this resource."
+          },
+          "404": {
+            "description": "Unknown target ID. Verify the target ID and try again.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "target"
+        ],
+        "summary": "Update a target for an account.\n",
+        "description": "Update a target for an account.\n",
+        "operationId": "updateTarget",
+        "parameters": [
+          {
+            "name": "target_id",
+            "in": "path",
+            "description": "ID of the target.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Details of the target request.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TargetUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "You have successfully edited your target.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Target"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request. If there is no response body, your request contains malformed JSON. \nIf there is a response body, Veracode could not validate your JSON payload. \nVerify the source attribute in each service error in the response and the associated code, and try again.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "403": {
+            "description": "Forbidden access to this resource."
+          },
+          "501": {
+            "description": "Server-side error. Please try again later.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "target"
+        ],
+        "summary": "Delete the target with the provided target ID.",
+        "description": "Delete the target with the provided target ID.",
+        "operationId": "deleteTargetById",
+        "parameters": [
+          {
+            "name": "target_id",
+            "in": "path",
+            "description": "ID of the target.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successfully deleted the target."
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "404": {
+            "description": "Unknown target ID. Verify the target ID and try again."
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/targets/{target_id}/spec": {
+      "get": {
+        "tags": [
+          "target"
+        ],
+        "summary": "Return a target API specification.\n",
+        "description": "Return a target API specification.\n",
+        "operationId": "getTargetApiSpec",
+        "parameters": [
+          {
+            "name": "target_id",
+            "in": "path",
+            "description": "ID of the target.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scan_id",
+            "in": "query",
+            "description": "UUID of the scan or analysis run.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. The API specification is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSpec"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "403": {
+            "description": "Forbidden access to this resource."
+          },
+          "404": {
+            "description": "Unknown target ID. Verify the target ID and try again.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "target"
+        ],
+        "summary": "Upload an API specification.\n",
+        "description": "Upload an API specification.\n",
+        "operationId": "uploadTargetApiSpec",
+        "parameters": [
+          {
+            "name": "target_id",
+            "in": "path",
+            "description": "ID of the target.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/target_id_spec_body"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "You have successfully uploaded an API specification.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSpec"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request. If there is no response body, your request contains malformed JSON. If there is a response body, Veracode could not validate your API specification file. Verify the source attribute in each service error in the response and the associated code, and try again.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "403": {
+            "description": "Forbidden access to this resource."
+          },
+          "501": {
+            "description": "Server-side error. Please try again later.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/targets/{target_id}/spec/download": {
+      "get": {
+        "tags": [
+          "target"
+        ],
+        "summary": "Return the contents of an API specification.\n",
+        "description": "Return the contents of an API specification.\n",
+        "operationId": "downloadTargetApiSpecContents",
+        "parameters": [
+          {
+            "name": "target_id",
+            "in": "path",
+            "description": "ID of the target.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scan_id",
+            "in": "query",
+            "description": "UUID of the scan or analysis run.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. The content of the API specification is returned.",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "403": {
+            "description": "Forbidden access to this resource."
+          },
+          "404": {
+            "description": "Unknown target ID. Verify the target ID and try again.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/targets/{target_id}/link": {
+      "put": {
+        "tags": [
+          "target"
+        ],
+        "summary": "Link a target to an application.\n",
+        "description": "Link a target to an application.\n",
+        "operationId": "linkTarget",
+        "parameters": [
+          {
+            "name": "target_id",
+            "in": "path",
+            "description": "UUID of the Target.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Details of the Dynamic Target app linking request.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TargetLinkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "You have successfully linked the target to an application.\n"
+          },
+          "400": {
+            "description": "Invalid request. If there is no response body, your request contains malformed JSON. \nIf there is a  response body, Veracode could not validate your JSON payload. \nVerify the source attribute in each  service error in the response and the associated code, and try again.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "403": {
+            "description": "Forbidden access to this resource."
+          },
+          "404": {
+            "description": "Dynamic target or application not found."
+          },
+          "409": {
+            "description": "Dynamic target or application is already linked."
+          },
+          "422": {
+            "description": "Target must be of enterprise type."
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "target"
+        ],
+        "summary": "Unlinks a target from an application.\n",
+        "description": "Unlinks a target from an application.\n",
+        "operationId": "unlinkTarget",
+        "parameters": [
+          {
+            "name": "target_id",
+            "in": "path",
+            "description": "ID of the Target.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "You have successfully unlinked the target from the application.\n"
+          },
+          "400": {
+            "description": "Invalid request. If there is no response body, your request contains malformed JSON. \nIf there is a  response body, Veracode could not validate your JSON payload. \nVerify the source attribute in each  service error in the response and the associated code, and try again.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "403": {
+            "description": "Forbidden access to this resource."
+          },
+          "404": {
+            "description": "Target not found."
+          },
+          "409": {
+            "description": "Unable to unlink, one or more result imports are still in progress."
+          },
+          "422": {
+            "description": "Target must be of enterprise type."
+          },
+          "501": {
+            "description": "Server-side error. Please try again later.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ism_gateways": {
+      "get": {
+        "tags": [
+          "ism_gateway"
+        ],
+        "summary": "Return the list of available ISM gateways for this account.\n",
+        "description": "Return the list of available ISM gateways for this account.\n",
+        "operationId": "getIsmGateways",
+        "responses": {
+          "200": {
+            "description": "Success. The ISM gateways are returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IsmGateway"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "403": {
+            "description": "Forbidden access to this resource."
+          },
+          "404": {
+            "description": "Resource not found."
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ism_gateways/targets/{target_id}": {
+      "get": {
+        "tags": [
+          "ism_gateway"
+        ],
+        "summary": "Return ISM gateway information for a given target.\n",
+        "description": "Return ISM gateway information for a given target.\n",
+        "operationId": "getTargetIsmGateway",
+        "parameters": [
+          {
+            "name": "target_id",
+            "in": "path",
+            "description": "ID of the target.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. ISM gateway configuration for a given target is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TargetIsmGateway"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "403": {
+            "description": "Forbidden access to this resource."
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ism_gateway"
+        ],
+        "summary": "Update ISM gateway configuration for a given target.\n",
+        "description": "Update ISM gateway configuration for a given target.\n",
+        "operationId": "updateTargetIsmGateway",
+        "parameters": [
+          {
+            "name": "target_id",
+            "in": "path",
+            "description": "ID of the target.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TargetIsmGateway"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success. ISM gateway configuration is updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TargetIsmGateway"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "403": {
+            "description": "Forbidden access to this resource."
+          },
+          "404": {
+            "description": "Resource not found."
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis_profiles": {
+      "get": {
+        "tags": [
+          "analysis_profile"
+        ],
+        "summary": "Return a list of analysis profiles.\n",
+        "description": "Return a list of analysis profiles.\n",
+        "operationId": "getAnalysisProfiles",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number index to start pagination.",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of records to return from pagination.",
+            "required": false,
+            "schema": {
+              "maximum": 200,
+              "minimum": 10,
+              "type": "integer",
+              "default": 10
+            }
+          },
+          {
+            "name": "target_id",
+            "in": "query",
+            "description": "Filter by target ID.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Filter by the type of the analysis profile.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/AnalysisProfileType"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analysis profile list is returned successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedAnalysisProfiles"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis_profiles/{analysis_profile_id}": {
+      "get": {
+        "tags": [
+          "analysis_profile"
+        ],
+        "summary": "Return an analysis profile. Each target level analysis profile inherits values from a parent analysis profile.\n",
+        "description": "Return an analysis profile. Each target level analysis profile inherits values from a parent analysis profile.\n",
+        "operationId": "getAnalysisProfileById",
+        "parameters": [
+          {
+            "name": "analysis_profile_id",
+            "in": "path",
+            "description": "ID of the analysis profile.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully returned the analysis profile.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "403": {
+            "description": "Forbidden access to this resource."
+          },
+          "404": {
+            "description": "Resource not found."
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "analysis_profile"
+        ],
+        "summary": "Update an analysis profile for an account.\n",
+        "description": "Update an analysis profile for an account.\n",
+        "operationId": "updateAnalysisProfile",
+        "parameters": [
+          {
+            "name": "analysis_profile_id",
+            "in": "path",
+            "description": "ID of the analysis profile.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "method",
+            "in": "query",
+            "description": "If set to PATCH, updates the content to values in the request, but null values and absent attributes are ignored.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PATCH"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Details of the analysis profile request.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalysisProfileUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "You have successfully edited your analysis profile.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisProfile"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request. If there is no response body, your request contains malformed JSON. \nIf there is a  response body, Veracode could not validate your JSON payload. \nVerify the source attribute in each  service error in the response and the associated code, and try again.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "403": {
+            "description": "Forbidden access to this resource."
+          },
+          "404": {
+            "description": "Resource not found."
+          },
+          "501": {
+            "description": "Server-side error. Please try again later.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis_profiles/{analysis_profile_id}/parent": {
+      "put": {
+        "tags": [
+          "analysis_profile"
+        ],
+        "summary": "Switch the parent of an analysis profile to inherit values of the new parent analysis profile.\n",
+        "description": "Switch the parent of an analysis profile to inherit values of the new parent analysis profile.\n",
+        "operationId": "updateAnalysisProfileParent",
+        "parameters": [
+          {
+            "name": "analysis_profile_id",
+            "in": "path",
+            "description": "ID of the analysis profile.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "ID of the new parent analysis profile.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalysisProfileUpdateParentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "You have successfully changed the parent of the analysis profile.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "403": {
+            "description": "Forbidden access to this resource."
+          },
+          "404": {
+            "description": "Resource not found."
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis_profiles/{analysis_profile_id}/schedule": {
+      "get": {
+        "tags": [
+          "schedule"
+        ],
+        "summary": "Return the schedule for a given analysis profile identifier.\n",
+        "description": "Return the schedule for a given analysis profile identifier.\n",
+        "operationId": "getSchedule",
+        "parameters": [
+          {
+            "name": "analysis_profile_id",
+            "in": "path",
+            "description": "ID of the analysis profile.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. The schedules are returned for a specific analysis profile.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleResponse"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No schedule has been found.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "schedule"
+        ],
+        "summary": "Update schedule for given analysis profile.\n",
+        "description": "Update schedule for given analysis profile.\n",
+        "operationId": "updateSchedule",
+        "parameters": [
+          {
+            "name": "analysis_profile_id",
+            "in": "path",
+            "description": "ID of the analysis profile.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Update the schedule request for the analysis profile.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "You have successfully edited your schedule.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "404": {
+            "description": "Unknown analysis profile or schedule ID. Verify the IDs and try again.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "schedule"
+        ],
+        "summary": "Remove the schedule for the given Analysis Profile UUID.\n",
+        "description": "Remove the schedule for the given Analysis Profile UUID.\n",
+        "operationId": "deleteSchedule",
+        "parameters": [
+          {
+            "name": "analysis_profile_id",
+            "in": "path",
+            "description": "ID of the analysis profile.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "You have successfully removed this schedule.\n"
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "404": {
+            "description": "Unknown analysis profile or schedule ID.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis_profiles/{analysis_profile_id}/authentications": {
+      "get": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Retrieve the effective authentications for an analysis profile\n",
+        "description": "Retrieve effective authentications for an analysis profile.\n",
+        "operationId": "getEffectiveAuthentications",
+        "parameters": [
+          {
+            "name": "analysis_profile_id",
+            "in": "path",
+            "description": "ID of the analysis profile.",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUIDWithoutHyphens"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. The effective authentication is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EffectiveAuthentications"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "404": {
+            "$ref": "#/components/responses/AnalysisProfile404Response"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problem500Response"
+          }
+        }
+      }
+    },
+    "/analysis_profiles/{analysis_profile_id}/system_authentication": {
+      "put": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Update System Authentication for the analysis profile and provided identifier.\n",
+        "description": "Update system authentication for the analysis profile and provided identifier.\n",
+        "operationId": "updateSystemAuthentication",
+        "parameters": [
+          {
+            "name": "analysis_profile_id",
+            "in": "path",
+            "description": "ID of the analysis profile.",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUIDWithoutHyphens"
+            }
+          },
+          {
+            "name": "method",
+            "in": "query",
+            "description": "If set to PATCH, updates the content to values in the request, but null values and absent attributes are ignored.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PATCH"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SystemAuthenticationUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "You have successfully updated system authentication for the analysis profile.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemAuthentication"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "You have successfully removed system authentication for the analysis profile.\n"
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "404": {
+            "$ref": "#/components/responses/Authentication404Response"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problem500Response"
+          }
+        }
+      }
+    },
+    "/analysis_profiles/assignable_parent_profiles": {
+      "get": {
+        "tags": [
+          "analysis_profile"
+        ],
+        "summary": "Return a list of analysis profiles that can be assigned as parent analysis profiles.\n",
+        "description": "Return a list of analysis profiles that can be assigned as parent analysis profiles.\n",
+        "operationId": "getAssignableParentProfiles",
+        "parameters": [
+          {
+            "name": "mode",
+            "in": "query",
+            "description": "Flag that filters by analysis profile mode.\n",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/ModeEnum"
+            }
+          },
+          {
+            "name": "analysis_profile_id",
+            "in": "query",
+            "description": "ID of the target's analysis profile. \nIf ID is provided, response returns available parent analysis profiles for an analysis profile.\nIf ID is missing, response returns available parent analysis profiles for the user organization.\n",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "include_scanners",
+            "in": "query",
+            "description": "Flag that denotes whether the analysis profile scanners should be included in the response.\nIf this is set to true, the analysis profile scanners should be included in the response.\nIf this is set to false, the analysis profile scanners are not returned in the response.\nIf flag is not included in the request, analysis profile scanners are not provided by default.\n",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. The parent analysis profile list is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssignableParentAnalysisProfile"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis_profiles/{analysis_profile_id}/certificate_authentication": {
+      "put": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Update Certificate Authentication for the analysis profile and provided identifier.\n",
+        "description": "Update certificate authentication for the analysis profile and provided identifier.\n",
+        "operationId": "updateCertificateAuthentication",
+        "parameters": [
+          {
+            "name": "analysis_profile_id",
+            "in": "path",
+            "description": "ID of the analysis profile.",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUIDWithoutHyphens"
+            }
+          },
+          {
+            "name": "method",
+            "in": "query",
+            "description": "If set to PATCH, updates the content to values in the request, but null values and absent attributes are ignored.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PATCH"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CertificateAuthenticationUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "You have successfully updated certificate authentication for the analysis profile.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateAuthentication"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "You have successfully removed certificate authentication from the analysis profile."
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "404": {
+            "$ref": "#/components/responses/Authentication404Response"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problem500Response"
+          }
+        }
+      }
+    },
+    "/analysis_profiles/{analysis_profile_id}/script_authentication": {
+      "put": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Update Script Authentication for the analysis profile and provided identifier.\n",
+        "operationId": "updateScriptAuthentication",
+        "parameters": [
+          {
+            "name": "analysis_profile_id",
+            "in": "path",
+            "description": "ID of the analysis profile.",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUIDWithoutHyphens"
+            }
+          },
+          {
+            "name": "method",
+            "in": "query",
+            "description": "If set to PATCH, updates the content to values in the request, but null values and absent attributes are ignored.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PATCH"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScriptAuthenticationUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "You have successfully updated script authentication for the analysis profile.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScriptAuthentication"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "You have successfully removed script authentication from the analysis profile.\n"
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "404": {
+            "$ref": "#/components/responses/Authentication404Response"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problem500Response"
+          }
+        }
+      }
+    },
+    "/analysis_profiles/{analysis_profile_id}/application_authentication": {
+      "put": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Update Form-based Application Authentication for the analysis profile and provided identifier.\n",
+        "description": "Update form-based application authentication for the analysis profile and provided identifier.\n",
+        "operationId": "updateApplicationAuthentication",
+        "parameters": [
+          {
+            "name": "analysis_profile_id",
+            "in": "path",
+            "description": "ID of the analysis profile.",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUIDWithoutHyphens"
+            }
+          },
+          {
+            "name": "method",
+            "in": "query",
+            "description": "If set to PATCH, updates the content to values in the request, but null values and absent attributes are ignored.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PATCH"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationAuthenticationUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "You have successfully updated form-based application authentication for the analysis profile.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationAuthentication"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "You have successfully removed form-based application authentication for the analysis profile.\n"
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "404": {
+            "$ref": "#/components/responses/Authentication404Response"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problem500Response"
+          }
+        }
+      }
+    },
+    "/analysis_profiles/{analysis_profile_id}/parameter_authentications": {
+      "put": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Update Parameter Authentication for the analysis profile.\n",
+        "description": "Update parameter authentication for the analysis profile.\n",
+        "operationId": "updateParameterAuthentications",
+        "parameters": [
+          {
+            "name": "analysis_profile_id",
+            "in": "path",
+            "description": "ID of the analysis profile.",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUIDWithoutHyphens"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ParameterAuthenticationsUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully updated the parameter authentications for the analysis profile.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParameterAuthentications"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "Successfully deleted the parameter authentications from the analysis profile."
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "404": {
+            "$ref": "#/components/responses/Authentication404Response"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problem500Response"
+          }
+        }
+      }
+    },
+    "/analysis_profiles/{analysis_profile_id}/srm_authentication": {
+      "put": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Update Scriptable Request Modification Authentication for the analysis profile and provided identifier.\n",
+        "operationId": "updateSRMAuthentication",
+        "parameters": [
+          {
+            "name": "analysis_profile_id",
+            "in": "path",
+            "description": "ID of the analysis profile.",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUIDWithoutHyphens"
+            }
+          },
+          {
+            "name": "method",
+            "in": "query",
+            "description": "If set to PATCH, updates the content to values in the request, but null values and absent attributes are ignored.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PATCH"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SRMAuthenticationUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "You have successfully updated Scriptable Request Modification (SRM) authentication for the analysis profile.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SRMAuthentication"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "You have successfully removed Scriptable Request Modification (SRM) authentication from the analysis profile.\n"
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "404": {
+            "$ref": "#/components/responses/Authentication404Response"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problem500Response"
+          }
+        }
+      }
+    },
+    "/analysis_profiles/{analysis_profile_id}/oauth2_authentication": {
+      "put": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Update OAuth2.0 Authentication for the analysis profile and provided identifier.\n",
+        "operationId": "updateOAuth2Authentication",
+        "parameters": [
+          {
+            "name": "analysis_profile_id",
+            "in": "path",
+            "description": "ID of the analysis profile.",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUIDWithoutHyphens"
+            }
+          },
+          {
+            "name": "method",
+            "in": "query",
+            "description": "If set to PATCH, updates the content to values in the request, but null values and absent attributes are ignored.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PATCH"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OAuth2AuthenticationUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "You have successfully updated OAuth 2.0 authentication for the analysis profile.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuth2Authentication"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "You have successfully removed OAuth 2.0 authentication from the analysis profile.\n"
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "404": {
+            "$ref": "#/components/responses/Authentication404Response"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problem500Response"
+          }
+        }
+      }
+    },
+    "/analysis_profiles/{analysis_profile_id}/scanners": {
+      "get": {
+        "tags": [
+          "analysis_profile_scanners"
+        ],
+        "summary": "Retrieve the Scanner Profile for the effective analysis profile.\n",
+        "description": "Retrieve the scanner profile for the effective analysis profile.\n",
+        "operationId": "getScannerProfile",
+        "parameters": [
+          {
+            "name": "analysis_profile_id",
+            "in": "path",
+            "description": "ID of the analysis profile.",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUIDWithoutHyphens"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. The scanner profile is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScannerProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "404": {
+            "$ref": "#/components/responses/AnalysisProfile404Response"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problem500Response"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "analysis_profile_scanners"
+        ],
+        "summary": "Update the Scanner Profile for the provided analysis profile.\n",
+        "description": "Update the scanner profile for the provided analysis profile.\n",
+        "operationId": "updateScannerProfile",
+        "parameters": [
+          {
+            "name": "analysis_profile_id",
+            "in": "path",
+            "description": "ID of the analysis profile.",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUIDWithoutHyphens"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScannerProfileUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "You have successfully updated the scanner profile for the analysis profile.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScannerProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "404": {
+            "$ref": "#/components/responses/AnalysisProfile404Response"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problem500Response"
+          }
+        }
+      }
+    },
+    "/analysis_profiles/{analysis_profile_id}/scanner_variables": {
+      "get": {
+        "tags": [
+          "scanner_variables"
+        ],
+        "summary": "Retrieve the Effective Scanner Variables for an analysis profile\n",
+        "description": "Retrieve the effective scanner variables for an analysis profile.\n",
+        "operationId": "getEffectiveScannerVariables",
+        "parameters": [
+          {
+            "name": "analysis_profile_id",
+            "in": "path",
+            "description": "ID of the analysis profile.",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUIDWithoutHyphens"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. The analysis profile effective scanner variables are returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EffectiveScannerVariables"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "404": {
+            "$ref": "#/components/responses/AnalysisProfile404Response"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problem500Response"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "scanner_variables"
+        ],
+        "summary": "Update Scanner Variables for the analysis profile.\n",
+        "description": "Update scanner variables for the analysis profile.\n",
+        "operationId": "updateScannerVariables",
+        "parameters": [
+          {
+            "name": "analysis_profile_id",
+            "in": "path",
+            "description": "ID of the analysis profile.",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUIDWithoutHyphens"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScannerVariablesUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "You have successfully updated scanner variables for the analysis profile.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EffectiveScannerVariables"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "Successfully deleted the scanner variables from the analysis profile.\n"
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "404": {
+            "$ref": "#/components/responses/Authentication404Response"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problem500Response"
+          }
+        }
+      }
+    },
+    "/analysis_profiles/{analysis_profile_id}/crawl_configuration": {
+      "get": {
+        "tags": [
+          "crawl_configuration"
+        ],
+        "summary": "Retrieve the Crawl Configuration for an analysis profile\n",
+        "operationId": "getCrawlConfiguration",
+        "parameters": [
+          {
+            "name": "analysis_profile_id",
+            "in": "path",
+            "description": "ID of the analysis profile.",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUIDWithoutHyphens"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. The crawl configuration for the analysis profile is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CrawlConfiguration"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "404": {
+            "$ref": "#/components/responses/AnalysisProfile404Response"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problem500Response"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "crawl_configuration"
+        ],
+        "description": "Update the crawl configuration for the provided analysis profile.\n",
+        "operationId": "updateCrawlConfiguration",
+        "parameters": [
+          {
+            "name": "analysis_profile_id",
+            "in": "path",
+            "description": "ID of the analysis profile.",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUIDWithoutHyphens"
+            }
+          },
+          {
+            "name": "method",
+            "in": "query",
+            "description": "If set to PATCH, updates the content to values in the request, but null values and absent attributes are ignored.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PATCH"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrawlConfigurationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "You have successfully updated the scanner profile for the analysis profile.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CrawlConfiguration"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "404": {
+            "$ref": "#/components/responses/AnalysisProfile404Response"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problem500Response"
+          }
+        }
+      }
+    },
+    "/analysis_run": {
+      "post": {
+        "tags": [
+          "analysis_run"
+        ],
+        "summary": "Starts a new analysis for the input target.\n",
+        "description": "Starts a new analysis for the input target.\n",
+        "operationId": "startAnalysisRun",
+        "requestBody": {
+          "description": "ID of the target.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TargetAnalysisRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Analysis started successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Target ID is invalid, or analysis is in progress.\n"
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis_run/report/{target_id}": {
+      "get": {
+        "tags": [
+          "analysis_run"
+        ],
+        "summary": "Get the analysis run report for the provided identifier.\n",
+        "description": "Get the analysis run report for the provided identifier.\n",
+        "operationId": "getAnalysisRunReportByTargetId",
+        "parameters": [
+          {
+            "name": "target_id",
+            "in": "path",
+            "description": "ID of the target.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "download",
+            "in": "query",
+            "description": "If true, returns the report file directly instead of redirecting.\n",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Report file (if `download=true`)",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "302": {
+            "description": "Success. Redirecting to report download URL.",
+            "headers": {
+              "location": {
+                "description": "Report download URL.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "404": {
+            "description": "Unknown target identifier. Verify the target ID and try again.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analysis_run/{target_id}/stop": {
+      "post": {
+        "tags": [
+          "analysis_run"
+        ],
+        "summary": "Stop analysis for a given target UUID.\n",
+        "description": "Stop analysis for a given target UUID.\n",
+        "operationId": "stopAnalysisRun",
+        "parameters": [
+          {
+            "name": "target_id",
+            "in": "path",
+            "description": "UUID of the target.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "description": "Type of action.",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/StopActionType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully performed stop action."
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem400Response"
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "403": {
+            "description": "Forbidden access to this resource."
+          },
+          "404": {
+            "description": "Unknown analysis run identifier. Verify the analysis run UUID and try again.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/discovered_targets": {
+      "get": {
+        "tags": [
+          "discovered_target"
+        ],
+        "summary": "Returns a list of all discovered targets.\n",
+        "description": "Returns a list of all discovered targets.\n",
+        "operationId": "getDiscoveredTargets",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number index to start pagination.",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of records to return from pagination.",
+            "required": false,
+            "schema": {
+              "maximum": 200,
+              "minimum": 10,
+              "type": "integer",
+              "default": 10
+            }
+          },
+          {
+            "name": "sort_by",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/DiscoveredTargetSortBy"
+            }
+          },
+          {
+            "name": "sort_order",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SortOrder"
+            }
+          },
+          {
+            "name": "url",
+            "in": "query",
+            "description": "Filter by the discovered target url.",
+            "required": false,
+            "schema": {
+              "maxLength": 1000,
+              "minLength": 1,
+              "pattern": "^[ -~]+$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "target_type",
+            "in": "query",
+            "description": "Filter by the discovered target type.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "WEB_APP",
+                "API"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by the discovered target status.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "NEW",
+                "MAPPED",
+                "IGNORED"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. The discovered target list is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedDiscoveredTargets"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/discovered_targets/ignore": {
+      "post": {
+        "tags": [
+          "discovered_target"
+        ],
+        "summary": "Marks the provided discovered targets as ignored.\n",
+        "description": "Sets the status of multiple discovered targets to IGNORED, unless any are already MAPPED.\n",
+        "operationId": "ignoreDiscoveredTargets",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IgnoreDiscoveredTargetsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully set the IGNORED status to the discovered targets."
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem400Response"
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "404": {
+            "description": "The request contains an unknown discovered target identifier. Verify the discovered target IDs and try again.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Discovered target is already mapped.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/discovered_targets/{discovered_target_id}/map": {
+      "post": {
+        "tags": [
+          "discovered_target"
+        ],
+        "summary": "Maps a discovered target to an existing DAST target.\n",
+        "description": "Maps a Discovered Target with status NEW to an existing DAST target. \nUpon successful mapping, the status of the Discovered Target will be updated to MAPPED.\n",
+        "operationId": "mapDiscoveredTarget",
+        "parameters": [
+          {
+            "name": "discovered_target_id",
+            "in": "path",
+            "description": "ID of the discovered target to map.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MapDiscoveredTargetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successfully mapped the discovered target."
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem400Response"
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "404": {
+            "description": "Discovered target or DAST target not found.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Discovered target is already mapped or ignored.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/discovered_targets/map_to_new": {
+      "post": {
+        "tags": [
+          "discovered_target"
+        ],
+        "summary": "Maps multiple discovered targets by creating new DAST targets.\n",
+        "description": "Creates a new dynamic target for each provided discovered target and maps them.\nThe operation is atomic: if validation fails for any discovered target, the entire request is rejected.\nAfter mapping, the status of each discovered target will be updated to MAPPED.\n",
+        "operationId": "batchMapDiscoveredTargets",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchMapDiscoveredTargetsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully mapped all discovered targets to new DAST targets.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmbeddedDiscoveredTargets"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem400Response"
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "404": {
+            "description": "One or more discovered targets not found.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "One or more discovered targets are already mapped or ignored.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "x-hidden": true
+    },
+    "/targets/{target_id}/analysis_runs": {
+      "get": {
+        "tags": [
+          "analysis_run"
+        ],
+        "summary": "Retrieve all Analysis Runs for the given target.\n",
+        "description": "Returns a list of all Analysis Runs associated with the specified target.\n",
+        "operationId": "getAnalysisRuns",
+        "parameters": [
+          {
+            "name": "target_id",
+            "in": "path",
+            "description": "UUID of the target.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number index to start pagination.",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of records to return from pagination.",
+            "required": false,
+            "schema": {
+              "maximum": 200,
+              "minimum": 10,
+              "type": "integer",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. The list of all Analysis Runs is retrieved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedAnalysisRuns"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem400Response"
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "403": {
+            "description": "Forbidden access to this resource."
+          },
+          "404": {
+            "description": "Unknown identifier. Verify the Dynamic Target UUID and try again.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/targets/{target_id}/analysis_runs/{analysis_run_id}": {
+      "get": {
+        "tags": [
+          "analysis_run"
+        ],
+        "summary": "Retrieve a specific analysis run.\n",
+        "description": "Returns the Analysis Run for the specified identifier.\n",
+        "operationId": "getAnalysisRunById",
+        "parameters": [
+          {
+            "name": "target_id",
+            "in": "path",
+            "description": "UUID of the target.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "description": "UUID of the analysis run.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. The Dynamic Analysis Run Object is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisRun"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem400Response"
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "403": {
+            "description": "Forbidden access to this resource."
+          },
+          "404": {
+            "description": "Unknown identifier. Verify the Dynamic Target and Analysis Run UUIDs and try again.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/targets/{target_id}/analysis_runs/{analysis_run_id}/report/{format}": {
+      "get": {
+        "tags": [
+          "analysis_run"
+        ],
+        "summary": "Gets the report for the provided analysis.\n",
+        "description": "Gets the report for the provided analysis run in the given format.\n",
+        "operationId": "getAnalysisRunReportByFormat",
+        "parameters": [
+          {
+            "name": "target_id",
+            "in": "path",
+            "description": "ID of the Dynamic Target.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "analysis_run_id",
+            "in": "path",
+            "description": "ID of the Analysis Run.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "in": "path",
+            "description": "The format of the report. Possible options are 'pdf', 'csv', and 'junit'.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the report file.",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "404": {
+            "description": "Unknown identifier. Verify the Dynamic Target ID and Analysis Run ID and try again.\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications": {
+      "get": {
+        "tags": [
+          "applications"
+        ],
+        "summary": "Retrieve a list of applications.\n",
+        "description": "Retrieve a list of applications.\n",
+        "operationId": "getApplications",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number index to start pagination.",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of records to return from pagination.",
+            "required": false,
+            "schema": {
+              "maximum": 200,
+              "minimum": 10,
+              "type": "integer",
+              "default": 10
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Filter by the application name.",
+            "required": false,
+            "schema": {
+              "maxLength": 1000,
+              "minLength": 1,
+              "pattern": "^[ -~]+$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success. The applications list is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedApplications"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "You are not authorized to perform this action."
+          },
+          "500": {
+            "description": "Server-side error. Please try again later.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Weekday": {
+        "type": "string",
+        "description": "The day of the week on which the schedule triggers. Use this field alone for WEEKLY frequency. For MONTHLY frequency, use this field together with `week_of_month` to schedule by an ordinal weekday. Do not set this field together with `day`.\n",
+        "nullable": true,
+        "enum": [
+          "MONDAY",
+          "TUESDAY",
+          "WEDNESDAY",
+          "THURSDAY",
+          "FRIDAY",
+          "SATURDAY",
+          "SUNDAY"
+        ]
+      },
+      "SchedulingFrequency": {
+        "type": "string",
+        "description": "Enum which represents frequency options for schedule.",
+        "enum": [
+          "DAILY",
+          "WEEKLY",
+          "MONTHLY"
+        ]
+      },
+      "ScheduleRequest": {
+        "required": [
+          "active_from",
+          "frequency",
+          "max_duration",
+          "time",
+          "timezone"
+        ],
+        "type": "object",
+        "properties": {
+          "frequency": {
+            "$ref": "#/components/schemas/SchedulingFrequency"
+          },
+          "interval": {
+            "minimum": 1,
+            "type": "integer",
+            "description": "The recurrence interval. The schedule runs every N units defined by `frequency`.\n",
+            "default": 1
+          },
+          "day": {
+            "maximum": 31,
+            "minimum": -1,
+            "type": "integer",
+            "description": "The calendar day (1–31) on which the schedule triggers for monthly frequency. Mutually exclusive with `weekday` and `week_of_month`. If the specified day does not exist in a given month (for example, 31 in February), the schedule is skipped for that month. Use -1 to specify the last day of the month.\n"
+          },
+          "weekday": {
+            "$ref": "#/components/schemas/Weekday"
+          },
+          "week_of_month": {
+            "maximum": 4,
+            "minimum": -1,
+            "type": "integer",
+            "description": "The week of the month for Monthly schedules. Use this field together with `weekday` to schedule by ordinal weekday occurrence. Do not set this field when `day` is used. Valid values: 1–4 (first through fourth occurrence of the weekday), -1 (last occurrence of the weekday in the month), 0 (not set).\n"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "time": {
+            "type": "string",
+            "description": "HH:mm",
+            "format": "time"
+          },
+          "max_duration": {
+            "maximum": 129599,
+            "minimum": 50,
+            "type": "integer",
+            "description": "Maximum duration for scan in minutes.",
+            "nullable": true,
+            "example": 4320
+          },
+          "active_from": {
+            "type": "string",
+            "description": "The date the schedule becomes active. The schedule will not trigger before this date. The specified timezone determines the start time.\n",
+            "format": "date"
+          },
+          "active_to": {
+            "type": "string",
+            "description": "The date through which the schedule remains active. The schedule does not trigger after this date. The specified timezone determines the end time. If omitted, the schedule runs indefinitely.\n",
+            "format": "date",
+            "nullable": true
+          }
+        },
+        "description": "Request to amend schedule. You can use this request object to create and update target schedule.\n",
+        "example": {
+          "frequency": "WEEKLY",
+          "interval": 2,
+          "day": 0,
+          "weekday": "MONDAY",
+          "timezone": "America/New_York",
+          "time": 1350,
+          "active_from": "2026-01-01",
+          "active_to": "2027-01-01",
+          "max_duration": 4320
+        }
+      },
+      "ScheduleResponse": {
+        "required": [
+          "active_from",
+          "analysis_profile_id",
+          "created_at",
+          "first_run_at",
+          "frequency",
+          "status",
+          "time",
+          "timezone"
+        ],
+        "type": "object",
+        "properties": {
+          "analysis_profile_id": {
+            "type": "string",
+            "description": "ID of the analysis profile.",
+            "format": "string"
+          },
+          "frequency": {
+            "$ref": "#/components/schemas/SchedulingFrequency"
+          },
+          "interval": {
+            "minimum": 1,
+            "type": "integer",
+            "description": "Recurrence interval. The schedule is suppose to run every N units defined by `frequency`.\n",
+            "default": 1
+          },
+          "day": {
+            "maximum": 31,
+            "minimum": -1,
+            "type": "integer",
+            "description": "The calendar day (1–31) on which the schedule triggers for monthly frequency. Mutually exclusive with `weekday` and `week_of_month`. If the specified day does not exist in a given month (for example, 31 in February), the schedule is skipped for that month. Use -1 for the last day of the month.\n",
+            "default": 0
+          },
+          "weekday": {
+            "$ref": "#/components/schemas/Weekday"
+          },
+          "week_of_month": {
+            "maximum": 4,
+            "minimum": -1,
+            "type": "integer",
+            "description": "The week of the month for Monthly schedules. Use this field together with `weekday` to schedule by ordinal weekday occurrence. Do not set this field when `day` is used. Valid values: 1–4 (first through fourth occurrence of the weekday), -1 (last occurrence of the weekday in the month), 0 (not set).\n"
+          },
+          "timezone": {
+            "type": "string",
+            "description": "Time zone of the schedule."
+          },
+          "time": {
+            "type": "string",
+            "description": "Time of the scheduled run.",
+            "format": "time"
+          },
+          "max_duration": {
+            "maximum": 129599,
+            "minimum": 50,
+            "type": "integer",
+            "description": "Maximum duration for scan in minutes.",
+            "example": 4320
+          },
+          "active_from": {
+            "type": "string",
+            "description": "Date from which the schedule becomes active. The schedule will not trigger before this moment. The timezone specified determines when the schedule starts.\n",
+            "format": "date"
+          },
+          "active_to": {
+            "type": "string",
+            "description": "The date through which the schedule remains active. The schedule does not trigger after this date. The specified timezone determines when the schedule ends. If omitted, the schedule runs indefinitely.\n",
+            "format": "date",
+            "nullable": true
+          },
+          "first_run_at": {
+            "type": "string",
+            "description": "The date-time of the first scheduled trigger at or after `active_from`, based on the schedule configuration and timezone rules. Null if no valid future occurrences exist.\n",
+            "format": "date-time",
+            "nullable": true,
+            "readOnly": true
+          },
+          "next_run_at": {
+            "type": "string",
+            "description": "The date-time of the next scheduled trigger. Null if the schedule is EXPIRED or has no future occurrences.\n",
+            "format": "date-time",
+            "nullable": true,
+            "readOnly": true
+          },
+          "final_run_at": {
+            "type": "string",
+            "description": "The computed date-time of the final scheduled trigger. Present only when `end_after` is set, otherwise null.\n",
+            "format": "date-time",
+            "nullable": true,
+            "readOnly": true
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Time of creation."
+          },
+          "status": {
+            "type": "string",
+            "description": "Current lifecycle status of the schedule:\nINACTIVE:\n  The schedule has not yet become active and is not eligible to trigger.\n\nACTIVE:\n  The schedule is currently active and eligible to trigger.\n\nEXPIRED:\n  The schedule has ended and will no longer trigger.\n  The end condition defined by `active_to` has been reached.\n",
+            "enum": [
+              "INACTIVE",
+              "ACTIVE",
+              "EXPIRED"
+            ]
+          }
+        },
+        "description": "Analysis Schedule\n",
+        "example": {
+          "active_from": "2024-01-21",
+          "active_to": "2025-06-21",
+          "analysis_profile_id": "3fa85f6457174562b3fc2c963f66afa6",
+          "created_at": "2024-02-23T19:23:12.371595+01:00",
+          "day": 21,
+          "first_run_at": "2024-01-21T23:30:00",
+          "frequency": "MONTHLY",
+          "interval": 1,
+          "next_run_at": "2030-01-21T23:30:00",
+          "time": 1410,
+          "timezone": "America/New_York",
+          "status": "ACTIVE",
+          "max_duration": 4320
+        }
+      },
+      "TargetRequestBase": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "maxLength": 255,
+            "minLength": 1,
+            "pattern": "^[\\p{L}\\p{Nl}\\p{Nd}\\p{Print}]*$",
+            "type": "string",
+            "description": "Name of the target. The name must be unique to the application portfolio of the organization.\n"
+          },
+          "protocol": {
+            "type": "string",
+            "description": "Protocol of the target.",
+            "enum": [
+              "HTTP",
+              "HTTPS"
+            ]
+          },
+          "url": {
+            "maxLength": 1000,
+            "type": "string",
+            "description": "URL of the target.",
+            "example": "sub.domain.tld"
+          },
+          "api_specification_file_url": {
+            "maxLength": 255,
+            "type": "string",
+            "description": "URL of the API Specification file. Mandatory if target_type is API.",
+            "example": "https://sub.domain.tld/path/file.json"
+          },
+          "description": {
+            "pattern": "^[\\p{L}\\p{Nl}\\p{Nd}\\p{Print}]*$",
+            "type": "string",
+            "description": "Description of the target that will be created."
+          },
+          "teams": {
+            "type": "array",
+            "description": "IDs of teams that this target is visible to. Currently we support assigning 1 team for each target.",
+            "nullable": true,
+            "items": {
+              "pattern": "^[\\p{L}\\p{Nl}\\p{Nd}\\p{Print}]*$",
+              "type": "string"
+            }
+          }
+        },
+        "description": "The target request. You can use this request object to create and update a target.\n",
+        "example": {
+          "name": "name",
+          "protocol": "HTTP",
+          "url": "sub.domain.tld",
+          "api_specification_file_url": "https://sub.domain.tld/path/file.json",
+          "target_type": "WEB_APP",
+          "scan_type": "QUICK",
+          "description": "Example description.",
+          "is_sec_lead_only": false,
+          "authorized_to_scan": true,
+          "teams": [
+            "1"
+          ]
+        }
+      },
+      "TargetRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/TargetRequestBase"
+          },
+          {
+            "required": [
+              "authorized_to_scan",
+              "is_sec_lead_only",
+              "name",
+              "protocol",
+              "scan_type",
+              "target_type",
+              "url"
+            ],
+            "type": "object",
+            "properties": {
+              "target_type": {
+                "type": "string",
+                "description": "Target type. Values are WEB_APP, for scanning web applications, or API, for scanning REST APIs.\n",
+                "enum": [
+                  "WEB_APP",
+                  "API"
+                ]
+              },
+              "scan_type": {
+                "type": "string",
+                "description": "Target scan type. The values are QUICK, for quick scan, or FULL, for full scan.\n",
+                "enum": [
+                  "QUICK",
+                  "FULL",
+                  "ENTERPRISE"
+                ]
+              },
+              "is_sec_lead_only": {
+                "type": "boolean",
+                "description": "Indicates the visibility of this target. If set to true, the `teams` field must be null. If set to false, at least one team is required."
+              },
+              "authorized_to_scan": {
+                "type": "boolean",
+                "description": "Indicates whether the organization is allowed to scan the target."
+              }
+            }
+          }
+        ]
+      },
+      "TargetUpdateRequest": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/TargetRequestBase"
+          },
+          {
+            "type": "object"
+          }
+        ]
+      },
+      "Target": {
+        "required": [
+          "created_at",
+          "is_sec_lead_only",
+          "name",
+          "protocol",
+          "scan_type",
+          "target_id",
+          "target_type",
+          "teams",
+          "updated_at",
+          "url"
+        ],
+        "type": "object",
+        "properties": {
+          "target_id": {
+            "type": "string",
+            "description": "ID of the target."
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the target."
+          },
+          "protocol": {
+            "type": "string",
+            "description": "Protocol of the target.",
+            "enum": [
+              "HTTP",
+              "HTTPS"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "description": "URL of the target."
+          },
+          "api_specification_file_url": {
+            "type": "string",
+            "description": "URL of the API Specification file."
+          },
+          "target_type": {
+            "type": "string",
+            "description": "Target type. The values are WEB_APP, for scanning web applications, or API, for scanning REST APIs.",
+            "enum": [
+              "WEB_APP",
+              "API"
+            ]
+          },
+          "scan_type": {
+            "type": "string",
+            "description": "Target scan type. The values are QUICK for quick scan, FULL for full scan and ENTERPRISE for enterprise scan.\n",
+            "enum": [
+              "QUICK",
+              "FULL",
+              "ENTERPRISE"
+            ],
+            "default": "QUICK"
+          },
+          "created_at": {
+            "type": "string",
+            "description": "The date and time in UTC format indicating when the target was created."
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The date and time in UTC format indicating when the target was last modified."
+          },
+          "last_scan": {
+            "type": "string",
+            "description": "The date and time in UTC format indicating when the target was last modified."
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of target that was created."
+          },
+          "is_sec_lead_only": {
+            "type": "boolean",
+            "description": "Flag that denotes the visibility of this target. If this is set to true, teams should be left null.\n"
+          },
+          "teams": {
+            "type": "array",
+            "description": "IDs of teams that this target is visible to.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "application_name": {
+            "type": "string",
+            "description": "Name of the application this target belongs to."
+          },
+          "application_uuid": {
+            "type": "string",
+            "description": "UUID of the application this target belongs to."
+          },
+          "application_id": {
+            "type": "integer",
+            "description": "ID of the application this target belongs to.",
+            "format": "int64"
+          },
+          "max_cvss": {
+            "type": "number",
+            "description": "Highest CVSS flaw found in the last analysis."
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          }
+        },
+        "description": "The target model.\n",
+        "example": {
+          "protocol": "HTTP",
+          "updated_at": "updated_at",
+          "name": "name",
+          "target_type": "WEB_APP",
+          "scan_type": "QUICK",
+          "created_at": "created_at",
+          "target_id": "target_id",
+          "url": "url",
+          "api_specification_file_url": "api_specification_file_url",
+          "api_specification_file_S3_id": "api_specification_file_S3_id",
+          "description": "Example description.",
+          "is_sec_lead_only": false,
+          "teams": [
+            "1"
+          ],
+          "application_name": "application_name",
+          "application_uuid": "550e8400-e29b-41d4-a716-446655440000",
+          "application_id": 123
+        }
+      },
+      "TargetLinkRequest": {
+        "required": [
+          "application_uuid"
+        ],
+        "type": "object",
+        "properties": {
+          "application_uuid": {
+            "minLength": 1,
+            "type": "string",
+            "description": "Application uuid"
+          }
+        },
+        "description": "The target app linking request.\n",
+        "example": {
+          "application_uuid": "60E630B1-4AB7-4415-B920-5DD30B2E3A45"
+        }
+      },
+      "ApiSpec": {
+        "required": [
+          "specId"
+        ],
+        "type": "object",
+        "properties": {
+          "api_spec_s3_id": {
+            "type": "string",
+            "description": "The API specification identifier on S3."
+          },
+          "api_spec_name": {
+            "type": "string",
+            "description": "The API specification name."
+          },
+          "api_spec_url": {
+            "type": "string",
+            "description": "The API specification URL provided by the client."
+          },
+          "api_spec_type": {
+            "type": "string",
+            "description": "The API specification type."
+          },
+          "target_id": {
+            "type": "string",
+            "description": "ID of the target."
+          },
+          "analysis_run_id": {
+            "type": "string",
+            "description": "ID of the analysis run."
+          },
+          "uploaded_at": {
+            "type": "string",
+            "description": "The date and time in UTC format indicating when the API specification was uploaded."
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "The date and time in UTC format indicating when the API specification was last modified."
+          },
+          "uploaded_by": {
+            "type": "string",
+            "description": "Principal by whom the API specification was uploaded."
+          },
+          "updated_by": {
+            "type": "string",
+            "description": "Principal by whom the API specification was last modified."
+          },
+          "scope_rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScopeRule"
+            }
+          }
+        }
+      },
+      "SpecUrl": {
+        "required": [
+          "specUrl"
+        ],
+        "type": "object",
+        "properties": {
+          "specUrl": {
+            "type": "string",
+            "description": "URL of the API specification from where it can be downloaded."
+          }
+        }
+      },
+      "TargetAnalysisRunRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "pattern": "^[\\p{L}\\p{Nl}\\p{Nd}\\p{Print}]*$",
+            "type": "string",
+            "description": "ID of the target to perform action on the analysis run."
+          }
+        },
+        "description": "Used to perform an action for an analysis run of a target.",
+        "example": {
+          "id": "uuid5678912345678912345678912347"
+        }
+      },
+      "IsmGateway": {
+        "type": "object",
+        "properties": {
+          "refId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "hostname": {
+            "type": "string"
+          },
+          "endpoints": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IsmEndpoint"
+            }
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "description": "Internal scanning gateway."
+      },
+      "IsmEndpoint": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "description": "Internal scanning endpoint."
+      },
+      "TargetIsmGateway": {
+        "type": "object",
+        "properties": {
+          "gatewayUuid": {
+            "type": "string"
+          },
+          "endpointUuid": {
+            "type": "string"
+          }
+        }
+      },
+      "SystemAuthenticationUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/username"
+              }
+            ]
+          },
+          "password": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/password"
+              }
+            ]
+          }
+        },
+        "description": "The basic authentication update.\n",
+        "example": {
+          "username": "username",
+          "password": "password"
+        }
+      },
+      "CertificateAuthenticationUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "cert_name": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/cert_name"
+              }
+            ]
+          },
+          "base64_pkcs12": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/base64_pkcs12"
+              }
+            ]
+          },
+          "password": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/password"
+              }
+            ]
+          }
+        },
+        "description": "The certificate authentication update.\n"
+      },
+      "ScriptAuthenticationUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "login_script": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Script"
+              }
+            ]
+          },
+          "logout_script": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Script"
+              }
+            ]
+          }
+        },
+        "description": "The script authentication update.\n"
+      },
+      "ApplicationAuthenticationUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "login_url": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/login_url"
+              }
+            ]
+          }
+        },
+        "description": "The form-based application authentication.",
+        "example": {
+          "username": "username",
+          "password": "password",
+          "login_url": "https://sub.domain.tld/path/login",
+          "enable_ai_login": false
+        },
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SystemAuthenticationUpdateRequest"
+          }
+        ]
+      },
+      "SRMAuthenticationUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "script_name": {
+            "type": "string",
+            "description": "Scriptable Request Modification (SRM) script name.",
+            "nullable": true
+          },
+          "script_type": {
+            "description": "The type of Scriptable Request Modification (SRM) script. JavaScript is the only supported format for SRM.",
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ScriptTypeEnum"
+              }
+            ]
+          },
+          "script_body": {
+            "type": "string",
+            "description": "Scriptable Request Modification (SRM) script body, base64 encoded",
+            "nullable": true
+          }
+        },
+        "description": "The Scriptable Request Modification (SRM) authentication update.\n",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Script"
+          }
+        ]
+      },
+      "OAuth2AuthenticationUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "access_token_url": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/oauth_access_token_url"
+              }
+            ]
+          },
+          "client_id": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/oauth_client_id"
+              }
+            ]
+          },
+          "client_secret": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/oauth_client_secret"
+              }
+            ]
+          },
+          "authorization_url": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/oauth_authorization_url"
+              }
+            ]
+          },
+          "grant_type": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/oauth_grant_type"
+              }
+            ]
+          },
+          "username": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/oauth_username"
+              }
+            ]
+          },
+          "password": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/oauth_password"
+              }
+            ]
+          },
+          "redirect_url": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/oauth_redirect_url"
+              }
+            ]
+          },
+          "scope": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/oauth_scope"
+              }
+            ]
+          },
+          "use_openid_connect": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/oauth_use_openid_connect"
+              }
+            ]
+          },
+          "openid_url": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/oauth_openid_url"
+              }
+            ]
+          }
+        },
+        "description": "The OAuth 2.0 authentication update.\n"
+      },
+      "OAuth2Authentication": {
+        "title": "The OAuth 2.0 Authentication.",
+        "type": "object",
+        "properties": {
+          "access_token_url": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/oauth_access_token_url"
+              }
+            ]
+          },
+          "client_id": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/oauth_client_id"
+              }
+            ]
+          },
+          "client_secret": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/oauth_client_secret"
+              }
+            ]
+          },
+          "authorization_url": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/oauth_authorization_url"
+              }
+            ]
+          },
+          "grant_type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/oauth_grant_type"
+              }
+            ]
+          },
+          "username": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/oauth_username"
+              }
+            ]
+          },
+          "password": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/oauth_password"
+              }
+            ]
+          },
+          "redirect_url": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/oauth_redirect_url"
+              }
+            ]
+          },
+          "scope": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/oauth_scope"
+              }
+            ]
+          },
+          "use_openid_connect": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/oauth_use_openid_connect"
+              }
+            ],
+            "default": false
+          },
+          "openid_url": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/oauth_openid_url"
+              }
+            ]
+          }
+        },
+        "description": "Configure OAuth 2.0 authentication based on grant type for Veracode to scan APIs. Veracode supports client credentials and password credentials grant types. You can also use OpenID Connect. It sends the authorization data automatically as an HTTP Authorization Header.\n"
+      },
+      "OAuth2GrantType": {
+        "type": "string",
+        "description": "Grant type of OAuth 2.0 authentication.",
+        "enum": [
+          "CLIENT_CREDENTIALS",
+          "PASSWORD",
+          "AUTHORIZATION_CODE",
+          "AUTHORIZATION_CODE_PKCE"
+        ]
+      },
+      "EffectiveAuthentications": {
+        "type": "object",
+        "properties": {
+          "system_authentication": {
+            "$ref": "#/components/schemas/EffectiveSystemAuthentication"
+          },
+          "application_authentication": {
+            "$ref": "#/components/schemas/EffectiveApplicationAuthentication"
+          },
+          "parameter_authentications": {
+            "$ref": "#/components/schemas/EffectiveParameterAuthentications"
+          },
+          "certificate_authentication": {
+            "$ref": "#/components/schemas/EffectiveCertificateAuthentication"
+          },
+          "script_authentication": {
+            "$ref": "#/components/schemas/EffectiveScriptAuthentication"
+          },
+          "srm_authentication": {
+            "$ref": "#/components/schemas/EffectiveSRMAuthentication"
+          },
+          "oauth2_authentication": {
+            "$ref": "#/components/schemas/EffectiveOAuth2Authentication"
+          }
+        },
+        "description": "The effective authentication model of analysis profile.\n"
+      },
+      "EffectiveSystemAuthentication": {
+        "required": [
+          "effective_value"
+        ],
+        "type": "object",
+        "properties": {
+          "effective_value": {
+            "$ref": "#/components/schemas/SystemAuthentication"
+          }
+        },
+        "description": "The effective system authentication of analysis profile.\n",
+        "nullable": true,
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/InheritableValue"
+          }
+        ]
+      },
+      "EffectiveCertificateAuthentication": {
+        "required": [
+          "effective_value"
+        ],
+        "type": "object",
+        "properties": {
+          "effective_value": {
+            "$ref": "#/components/schemas/CertificateAuthentication"
+          }
+        },
+        "description": "The effective certificate authentication of analysis profile.\n",
+        "nullable": true,
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/InheritableValue"
+          }
+        ]
+      },
+      "EffectiveScriptAuthentication": {
+        "required": [
+          "effective_value"
+        ],
+        "type": "object",
+        "properties": {
+          "effective_value": {
+            "$ref": "#/components/schemas/ScriptAuthentication"
+          }
+        },
+        "description": "The effective script authentication of analysis profile.",
+        "nullable": true,
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/InheritableValue"
+          }
+        ]
+      },
+      "EffectiveSRMAuthentication": {
+        "required": [
+          "effective_value"
+        ],
+        "type": "object",
+        "properties": {
+          "effective_value": {
+            "$ref": "#/components/schemas/SRMAuthentication"
+          }
+        },
+        "description": "The effective Scriptable Request Modification (SRM) authentication of analysis profile.",
+        "nullable": true,
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/InheritableValue"
+          }
+        ]
+      },
+      "EffectiveOAuth2Authentication": {
+        "required": [
+          "effective_value"
+        ],
+        "type": "object",
+        "properties": {
+          "effective_value": {
+            "$ref": "#/components/schemas/OAuth2Authentication"
+          }
+        },
+        "description": "The effective OAuth2.0 authentication of analysis profile.",
+        "nullable": true,
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/InheritableValue"
+          }
+        ]
+      },
+      "EffectiveApplicationAuthentication": {
+        "required": [
+          "effective_value"
+        ],
+        "type": "object",
+        "properties": {
+          "effective_value": {
+            "$ref": "#/components/schemas/ApplicationAuthentication"
+          }
+        },
+        "description": "The effective form-based application authentication of analysis profile.\n",
+        "nullable": true,
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/InheritableValue"
+          }
+        ]
+      },
+      "SystemAuthentication": {
+        "required": [
+          "username"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "$ref": "#/components/schemas/username"
+          },
+          "password": {
+            "$ref": "#/components/schemas/password"
+          }
+        },
+        "description": "The system authentication model.\n",
+        "example": {
+          "username": "john.doe",
+          "password": "password123"
+        }
+      },
+      "ApplicationAuthentication": {
+        "required": [
+          "login_url",
+          "username"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "$ref": "#/components/schemas/username"
+          },
+          "password": {
+            "$ref": "#/components/schemas/password"
+          },
+          "login_url": {
+            "$ref": "#/components/schemas/login_url"
+          },
+          "enable_ai_login": {
+            "$ref": "#/components/schemas/enable_ai_login"
+          }
+        },
+        "description": "The form-based application authentication model.\n",
+        "example": {
+          "username": "john.doe",
+          "login_url": "/login/login.php",
+          "password": "password123",
+          "enable_ai_login": false
+        }
+      },
+      "CertificateAuthentication": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "$ref": "#/components/schemas/password"
+          },
+          "base64_pkcs12": {
+            "$ref": "#/components/schemas/base64_pkcs12"
+          },
+          "cert_name": {
+            "$ref": "#/components/schemas/cert_name"
+          }
+        },
+        "description": "Configure client certificate authentication.\n"
+      },
+      "ScriptAuthentication": {
+        "type": "object",
+        "properties": {
+          "login_script": {
+            "$ref": "#/components/schemas/Script"
+          },
+          "logout_script": {
+            "$ref": "#/components/schemas/Script"
+          }
+        },
+        "description": "Configure client script authentication."
+      },
+      "SRMAuthentication": {
+        "type": "object",
+        "properties": {
+          "script_name": {
+            "type": "string",
+            "description": "Scriptable Request Modification (SRM) script name."
+          },
+          "script_type": {
+            "description": "The type of script. JavaScript is the only supported format for Scriptable request modification.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ScriptTypeEnum"
+              }
+            ]
+          },
+          "script_body": {
+            "type": "string",
+            "description": "Scriptable Request Modification (SRM) script body."
+          }
+        },
+        "description": "Configure Scriptable Request Modification (SRM) based authentication.\n",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Script"
+          }
+        ]
+      },
+      "InheritableValue": {
+        "required": [
+          "is_inherited"
+        ],
+        "type": "object",
+        "properties": {
+          "is_inherited": {
+            "type": "boolean",
+            "description": "Flag how effective value is calculated.\n",
+            "default": false
+          }
+        },
+        "description": "The generic AP configuration value.\n",
+        "example": {
+          "is_inherited": false
+        }
+      },
+      "Problem": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "An absolute URI that identifies the problem type.",
+            "format": "uri",
+            "default": "about:blank"
+          },
+          "title": {
+            "type": "string",
+            "description": "A short, summary of the problem type. Written in English and \nreadable for engineers (usually not suited for non technical stakeholders and not localized).\n"
+          },
+          "status": {
+            "maximum": 599,
+            "minimum": 400,
+            "type": "integer",
+            "description": "The HTTP status code is generated by the origin server for this occurrence of the problem.",
+            "format": "int32",
+            "example": 500
+          },
+          "detail": {
+            "type": "string",
+            "description": "A human-readable explanation specific to this occurrence of the problem."
+          },
+          "instance": {
+            "type": "string",
+            "description": "An absolute URI that identifies the specific occurrence of the problem.",
+            "format": "URI"
+          },
+          "errors": {
+            "type": "array",
+            "description": "A list of errors that exist with the request.",
+            "items": {
+              "$ref": "#/components/schemas/ProblemError"
+            }
+          }
+        },
+        "description": "A Problem Details object (RFC 7807).\n"
+      },
+      "PageMeta": {
+        "required": [
+          "number",
+          "size",
+          "total_elements",
+          "total_pages"
+        ],
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "integer",
+            "description": "Current page number."
+          },
+          "size": {
+            "type": "integer",
+            "description": "Size of the current page."
+          },
+          "total_pages": {
+            "type": "integer",
+            "description": "Total number of pages in the results."
+          },
+          "total_elements": {
+            "type": "integer",
+            "description": "Total number of records in the results.",
+            "format": "int64"
+          }
+        },
+        "description": "Information related to the current page of results returned."
+      },
+      "PagedTargets": {
+        "required": [
+          "page"
+        ],
+        "type": "object",
+        "properties": {
+          "_embedded": {
+            "$ref": "#/components/schemas/EmbeddedTargets"
+          },
+          "_links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Link"
+            }
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageMeta"
+          }
+        }
+      },
+      "SortBy": {
+        "type": "string",
+        "description": "Permitted parameters for sorting paginated results: name, URL, target_type\n",
+        "enum": [
+          "name",
+          "url",
+          "target_type",
+          "last_scan",
+          "status",
+          "max_cvss"
+        ],
+        "default": "name"
+      },
+      "SortOrder": {
+        "type": "string",
+        "description": "Permitted sorting direction for paginated results: asc, desc\n",
+        "enum": [
+          "asc",
+          "desc"
+        ],
+        "default": "asc"
+      },
+      "Status": {
+        "type": "string",
+        "enum": [
+          "RUNNING",
+          "STOPPING",
+          "STOPPED",
+          "FINISHED",
+          "FAILED"
+        ]
+      },
+      "EmbeddedTargets": {
+        "required": [
+          "targets"
+        ],
+        "type": "object",
+        "properties": {
+          "targets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Target"
+            }
+          }
+        }
+      },
+      "PagedDiscoveredTargets": {
+        "required": [
+          "page"
+        ],
+        "type": "object",
+        "properties": {
+          "_embedded": {
+            "$ref": "#/components/schemas/EmbeddedDiscoveredTargets"
+          },
+          "_links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Link"
+            }
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageMeta"
+          }
+        }
+      },
+      "EmbeddedDiscoveredTargets": {
+        "required": [
+          "discovered_targets"
+        ],
+        "type": "object",
+        "properties": {
+          "discovered_targets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DiscoveredTarget"
+            }
+          }
+        }
+      },
+      "DiscoveredTarget": {
+        "required": [
+          "discovered_target_id",
+          "discovery_source_url",
+          "first_discovered_date",
+          "last_discovered_date",
+          "protocol",
+          "status",
+          "target_type",
+          "url"
+        ],
+        "type": "object",
+        "properties": {
+          "discovered_target_id": {
+            "type": "string",
+            "description": "UUID of the discovered target."
+          },
+          "protocol": {
+            "type": "string",
+            "description": "Protocol of the discovered target.",
+            "enum": [
+              "HTTP",
+              "HTTPS"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "description": "URL of the discovered target."
+          },
+          "target_type": {
+            "type": "string",
+            "description": "Type of the discovered target.\n",
+            "enum": [
+              "WEB_APP",
+              "API"
+            ]
+          },
+          "first_discovered_date": {
+            "type": "string",
+            "description": "The date when the target was discovered for the first time."
+          },
+          "last_discovered_date": {
+            "type": "string",
+            "description": "The date when the target was discovered for the last time."
+          },
+          "status": {
+            "type": "string",
+            "description": "Status of the discovered target.\n",
+            "enum": [
+              "NEW",
+              "MAPPED",
+              "IGNORED"
+            ]
+          },
+          "discovery_source_url": {
+            "type": "string",
+            "description": "The source URL of the discovered target."
+          },
+          "mapped_target_id": {
+            "type": "string",
+            "description": "UUID of the DAST target to which the discovered target is mapped."
+          }
+        },
+        "description": "The discovered target model.\n",
+        "example": {
+          "discovered_target_id": "f2f030d8-9012-4ef0-a889-96f6f7ce152e",
+          "protocol": "HTTP",
+          "url": "veracode.com",
+          "target_type": "WEB_APP",
+          "first_discovered_date": "12.02.2025",
+          "last_discovered_date": "25.03.2025",
+          "status": "NEW",
+          "discovery_source_url": "source.com/target/f2f030d8-9012-4ef0-a889-96f6f7ce152e",
+          "mapped_target_id": "b45e3516-1b1c-45eb-a3e8-dd4393ac5a4a"
+        }
+      },
+      "DiscoveredTargetSortBy": {
+        "type": "string",
+        "description": "Permitted parameters for sorting discovered targets.\n",
+        "enum": [
+          "protocol",
+          "url",
+          "target_type",
+          "status",
+          "first_discovered_date",
+          "last_discovered_date"
+        ],
+        "default": "last_discovered_date"
+      },
+      "IgnoreDiscoveredTargetsRequest": {
+        "required": [
+          "discovered_target_ids"
+        ],
+        "type": "object",
+        "properties": {
+          "discovered_target_ids": {
+            "type": "array",
+            "description": "List of discovered target IDs to ignore.",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "List of discovered targets to ignore."
+      },
+      "MapDiscoveredTargetRequest": {
+        "required": [
+          "target_id"
+        ],
+        "type": "object",
+        "properties": {
+          "target_id": {
+            "type": "string",
+            "description": "ID of the DAST target to map to."
+          }
+        }
+      },
+      "BatchMapDiscoveredTargetsRequest": {
+        "required": [
+          "discovered_target_ids"
+        ],
+        "type": "object",
+        "properties": {
+          "discovered_target_ids": {
+            "maxItems": 100,
+            "minItems": 1,
+            "type": "array",
+            "description": "List of discovered target IDs to map.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "authorized_to_scan": {
+            "type": "boolean",
+            "description": "Whether the organization is allowed to scan the target."
+          }
+        }
+      },
+      "PagedAnalysisRuns": {
+        "required": [
+          "page"
+        ],
+        "type": "object",
+        "properties": {
+          "_embedded": {
+            "$ref": "#/components/schemas/EmbeddedAnalysisRuns"
+          },
+          "_links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Link"
+            }
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageMeta"
+          }
+        }
+      },
+      "EmbeddedAnalysisRuns": {
+        "required": [
+          "analysis_runs"
+        ],
+        "type": "object",
+        "properties": {
+          "analysis_runs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalysisRun"
+            }
+          }
+        }
+      },
+      "PagedApplications": {
+        "required": [
+          "page"
+        ],
+        "type": "object",
+        "properties": {
+          "_embedded": {
+            "$ref": "#/components/schemas/EmbeddedApplications"
+          },
+          "_links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Link"
+            }
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageMeta"
+          }
+        }
+      },
+      "EmbeddedApplications": {
+        "required": [
+          "Applications"
+        ],
+        "type": "object",
+        "properties": {
+          "Applications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Application"
+            }
+          }
+        }
+      },
+      "Application": {
+        "required": [
+          "guid",
+          "id",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "guid": {
+            "type": "string",
+            "description": "Application UUID"
+          },
+          "id": {
+            "type": "string",
+            "description": "Application Identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "Application Name"
+          },
+          "linked_scan_target_url": {
+            "type": "string",
+            "description": "Target URL of the scan linked to this Application"
+          }
+        }
+      },
+      "Link": {
+        "type": "object",
+        "properties": {
+          "href": {
+            "type": "string"
+          },
+          "rel": {
+            "type": "string"
+          },
+          "templated": {
+            "type": "boolean"
+          }
+        },
+        "description": "A HATEOAS link."
+      },
+      "ProblemError": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Problem error code.",
+            "example": "ERROR_CODE",
+            "enum": [
+              "TARGET_NAME_NOT_UNIQUE",
+              "MALFORMED_MULTIPART_REQUEST",
+              "INVALID_SEC_LEAD_PERMISSIONS",
+              "INVALID_TEAM_COUNT",
+              "MUST_NOT_BE_NULL",
+              "TEAM_UNAUTHORIZED",
+              "API_SPEC_URL_REQUIRED",
+              "MALFORMED_TARGET_URL",
+              "INTERNAL_SERVER_ERROR",
+              "TARGET_NOT_FOUND",
+              "ANALYSIS_RUN_NOT_FOUND",
+              "ANALYSIS_PROFILE_NOT_FOUND",
+              "SCOPE_RULE_NOT_FOUND",
+              "SCANNER_PROFILE_NOT_FOUND",
+              "USER_NOT_FOUND",
+              "INVALID_QUERY_PARAM_VALUE",
+              "ILLEGAL_ARGUMENT",
+              "ACCESS_DENIED",
+              "DOWNSTREAM_SERVER_ERROR",
+              "UNAUTHORIZED_USER",
+              "USER_INFO_DETECTED_TARGET_URL",
+              "IPV6_NOT_SUPPORTED_TARGET_URL",
+              "FAILED_TO_PARSE_TARGET_URL",
+              "PRIVATE_IP_NOT_SUPPORTED_TARGET_URL",
+              "LOCALHOST_NOT_SUPPORTED_TARGET_URL",
+              "PROTOCOL_IN_TARGET_URL",
+              "PORT_INVALID_TARGET_URL",
+              "TARGET_URL_NOT_LOWERCASE",
+              "TOP_LEVEL_DOMAIN_INVALID_TARGET_URL",
+              "SIZE_MUST_BE_BETWEEN_0_AND_255",
+              "SIZE_MUST_BE_BETWEEN_1_AND_255",
+              "SIZE_MUST_BE_BETWEEN_5_AND_255",
+              "SIZE_MUST_BE_BETWEEN_0_AND_1000",
+              "SIZE_MUST_BE_BETWEEN_1_AND_1000",
+              "SIZE_MUST_BE_BETWEEN_1_AND_10000",
+              "SIZE_MUST_BE_BETWEEN_50_AND_5000000",
+              "RATE_LIMIT_INVALID_ANALYSIS_PROFILE",
+              "MAX_SCAN_DURATION_INVALID_ANALYSIS_PROFILE",
+              "MAX_CRAWL_DURATION_INVALID_ANALYSIS_PROFILE",
+              "MAX_BROWSERS_INVALID_ANALYSIS_PROFILE",
+              "SIMILARITY_THRESHOLD_INVALID_ANALYSIS_PROFILE",
+              "INVALID_TARGET_STATE",
+              "INVALID_ANALYSIS_STATE",
+              "SCAN_REPORT_NOT_READY",
+              "COVERAGE_REPORT_NOT_READY",
+              "MALFORMED_URL",
+              "IPV6_NOT_SUPPORTED",
+              "FAILED_TO_PARSE_URL",
+              "PRIVATE_IP_NOT_SUPPORTED",
+              "LOCALHOST_NOT_SUPPORTED",
+              "INVALID_PORT",
+              "URL_NOT_LOWERCASE",
+              "INVALID_TOP_LEVEL_DOMAIN",
+              "INVALID_PROTOCOL",
+              "PARENT_INVALID_ANALYSIS_PROFILE",
+              "CSRF_SCANNER_INVALID",
+              "COMMAND_INJECTION_SCANNER_INVALID",
+              "DESERIALIZATION_SCANNER_INVALID",
+              "FILE_INCLUSION_SCANNER_INVALID",
+              "FINGER_PRINTING_SCANNER_INVALID",
+              "FUZZER_SCANNER_INVALID",
+              "HTTP_HEADER_SCANNER_INVALID",
+              "PORT_SCAN_SCANNER_INVALID",
+              "PRIVILEGE_ESCALATION_SCANNER_INVALID",
+              "SQL_INJECTION_SCANNER_INVALID",
+              "SSL_SCANNER_INVALID",
+              "XSS_SCANNER_INVALID",
+              "XXE_SCANNER_INVALID",
+              "LDAP_INJECTION_SCANNER_INVALID",
+              "COMMON_LOGIN_SCANNER_INVALID",
+              "TRACE_METHOD_SCANNER_INVALID",
+              "CODE_INJECTION_SCANNER_INVALID",
+              "UNSECURED_LOGIN_SCANNER_INVALID",
+              "CLICKJACKING_SCANNER_INVALID",
+              "SSTI_SCANNER_INVALID",
+              "OBSOLETE_RESOURCE_SCANNER_INVALID",
+              "INSECURE_JWT_SCANNER_INVALID",
+              "BACKUP_FILE_SCANNER_INVALID",
+              "ERROR_PATTERN_SCANNER_INVALID",
+              "OPEN_REDIRECT_SCANNER_INVALID",
+              "SSRF_SCANNER_INVALID",
+              "WEBSERVER_DIR_LIST_SCANNER_INVALID",
+              "HTTP_RESP_SPLIT_SCANNER_INVALID",
+              "VIEW_STATE_SCANNER_INVALID",
+              "FILE_UPLOAD_SCANNER_INVALID",
+              "FLASH_SCANNER_INVALID",
+              "FILE_DIR_EXPOSURE_SCANNER_INVALID",
+              "URL_SESSION_SCANNER_INVALID",
+              "STRUTS2_SCANNER_INVALID",
+              "MALICIOUS_HOST_SCANNER_INVALID",
+              "AUTHENTICATION_NOT_FOUND",
+              "AUTHENTICATION_DELETE_ERROR",
+              "REPORT_DATA_NOT_READY",
+              "SCRIPT_COMMAND_NOT_SUPPORTED",
+              "MUST_NOT_BE_EMPTY",
+              "CERTIFICATE_DECODING_ERROR",
+              "CERTIFICATE_VALIDATION_ERROR",
+              "ENTERPRISE_MODE",
+              "SCAN_NOT_FOUND",
+              "INVALID_API_SPEC_FORMAT",
+              "FAILED_TO_UPLOAD_API_SPEC_TO_S3",
+              "FAILED_TO_GET_API_SPEC_FROM_S3",
+              "FAILED_TO_GET_RESOURCE",
+              "SCRIPT_TYPE_UNSUPPORTED",
+              "SCRIPT_INVALID",
+              "SCRIPT_INVALID_NAME",
+              "SCRIPT_INVALID_BASE64",
+              "SCRIPT_COUNT_INVALID",
+              "DA_TARGET_MAPPING_NOT_FOUND",
+              "DA_LAST_OCCURRENCE_NOT_FOUND",
+              "DA_SCAN_OCCURRENCE_NOT_FOUND",
+              "ISM_GATEWAY_MAPPING_ERROR",
+              "DELETE_ERROR",
+              "INVALID_CHARACTERS",
+              "MUST_NOT_BE_BLANK",
+              "INVALID_SCANNER_VARIABLE_REFERENCE_KEY",
+              "TARGET_LIMIT_EXCEEDED",
+              "ORGANIZATION_FORBIDDEN",
+              "DISCOVERED_TARGET_STATE_INVALID",
+              "MUST_BE_GREATER_THAN_OR_EQUAL_TO_0",
+              "ORGANIZATION_NOT_FOUND",
+              "DISCOVERED_TARGET_NOT_FOUND",
+              "DISCOVERED_TARGET_ORGANIZATION_MISMATCH",
+              "LIMIT_CREATE_DISCOVERED_TARGETS_EXCEEDED",
+              "TARGET_NOT_ENTERPRISE_TYPE",
+              "TARGET_ALREADY_LINKED_TO_APPLICATION",
+              "TARGET_NOT_LINKED_TO_ANY_APPLICATION",
+              "TARGET_ISM_CONFIGURATION_REQUIRED",
+              "APPLICATION_NOT_FOUND",
+              "APPLICATION_ALREADY_LINKED_TO_TARGET",
+              "INVALID_STATUS_TO_UNLINK_APPLICATION",
+              "DEPRECATED_SCAN_TYPE",
+              "ANALYSIS_NOTES_NOT_AVAILABLE",
+              "INVALID_SCHEDULE_REQUEST_PARAM",
+              "RESOURCE_NOT_EXISTS"
+            ]
+          },
+          "detail": {
+            "type": "string",
+            "description": "Details about the error.",
+            "example": "Details about the error."
+          }
+        }
+      },
+      "AnalysisProfile": {
+        "required": [
+          "allowed_urls",
+          "analysis_profile_id",
+          "crawler_enabled",
+          "crawler_mode",
+          "denied_urls",
+          "grouped_urls",
+          "max_crawl_duration",
+          "max_duration",
+          "mode",
+          "name",
+          "parent_analysis_profile_id",
+          "rate_limit",
+          "seed_urls"
+        ],
+        "type": "object",
+        "properties": {
+          "analysis_profile_id": {
+            "type": "string",
+            "description": "ID of the analysis profile."
+          },
+          "parent_analysis_profile_id": {
+            "type": "string",
+            "description": "ID of the parent analysis profile."
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the analysis profile."
+          },
+          "target_id": {
+            "type": "string",
+            "description": "ID of the target associated with analysis profile."
+          },
+          "mode": {
+            "$ref": "#/components/schemas/ModeEnum"
+          },
+          "allowed_urls": {
+            "$ref": "#/components/schemas/AllowedUrls"
+          },
+          "denied_urls": {
+            "$ref": "#/components/schemas/DeniedUrls"
+          },
+          "seed_urls": {
+            "$ref": "#/components/schemas/SeedUrls"
+          },
+          "grouped_urls": {
+            "$ref": "#/components/schemas/GroupedUrls"
+          },
+          "crawler_enabled": {
+            "$ref": "#/components/schemas/CrawlerEnabled"
+          },
+          "crawler_mode": {
+            "$ref": "#/components/schemas/CrawlerMode"
+          },
+          "rate_limit": {
+            "$ref": "#/components/schemas/RateLimit"
+          },
+          "max_duration": {
+            "$ref": "#/components/schemas/MaxDuration"
+          },
+          "max_crawl_duration": {
+            "$ref": "#/components/schemas/MaxCrawlDuration"
+          },
+          "max_browsers": {
+            "$ref": "#/components/schemas/MaxBrowsers"
+          },
+          "api_spec": {
+            "$ref": "#/components/schemas/ApiSpec"
+          },
+          "similarity_threshold": {
+            "$ref": "#/components/schemas/SimilarityThreshold"
+          },
+          "directory_restrictions": {
+            "$ref": "#/components/schemas/DirectoryRestrictions"
+          },
+          "enable_all_target_protocols": {
+            "$ref": "#/components/schemas/EnableAllTargetProtocols"
+          }
+        }
+      },
+      "AllowedUrls": {
+        "required": [
+          "effective_value",
+          "is_inherited"
+        ],
+        "type": "object",
+        "properties": {
+          "effective_value": {
+            "type": "array",
+            "description": "The list of allowed URL in effect for this  analysis profile.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "is_inherited": {
+            "type": "boolean",
+            "description": "True if the effective value is inherited from parent analysis profile, false otherwise."
+          }
+        },
+        "description": "List of allowed URLs."
+      },
+      "DeniedUrls": {
+        "required": [
+          "effective_value",
+          "is_inherited"
+        ],
+        "type": "object",
+        "properties": {
+          "effective_value": {
+            "type": "array",
+            "description": "The list of denied URLs in effect for this analysis profile.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "is_inherited": {
+            "type": "boolean",
+            "description": "True if the effective value is inherited from parent analysis profile, false otherwise."
+          }
+        },
+        "description": "List of denied URLs."
+      },
+      "SeedUrls": {
+        "required": [
+          "effective_value",
+          "is_inherited"
+        ],
+        "type": "object",
+        "properties": {
+          "effective_value": {
+            "type": "array",
+            "description": "The list of seed URLs in effect for this analysis profile.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "is_inherited": {
+            "type": "boolean",
+            "description": "True if the effective value is inherited from parent analysis profile, false otherwise."
+          }
+        },
+        "description": "List of seed URLs."
+      },
+      "GroupedUrls": {
+        "required": [
+          "effective_value",
+          "is_inherited"
+        ],
+        "type": "object",
+        "properties": {
+          "effective_value": {
+            "type": "array",
+            "description": "The list of grouped URLs in effect for this analysis profile.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "is_inherited": {
+            "type": "boolean",
+            "description": "True if the effective value is inherited from parent analysis profile, false otherwise."
+          }
+        },
+        "description": "List of grouped URL."
+      },
+      "CrawlerEnabled": {
+        "required": [
+          "effective_value",
+          "is_inherited"
+        ],
+        "type": "object",
+        "properties": {
+          "effective_value": {
+            "type": "boolean",
+            "description": "Determines whether crawler can be used during scans."
+          },
+          "is_inherited": {
+            "type": "boolean",
+            "description": "True if the effective value is inherited from parent analysis profile, false otherwise."
+          }
+        },
+        "description": "Determines whether crawler can be used during scans."
+      },
+      "CrawlerMode": {
+        "required": [
+          "effective_value",
+          "is_inherited"
+        ],
+        "type": "object",
+        "properties": {
+          "effective_value": {
+            "$ref": "#/components/schemas/CrawlerModeEnum"
+          },
+          "is_inherited": {
+            "type": "boolean",
+            "description": "True if the effective value is inherited from parent analysis profile, false otherwise."
+          }
+        },
+        "description": "Crawler mode."
+      },
+      "CrawlerModeEnum": {
+        "type": "string",
+        "description": "The crawler mode in effect for this analysis profile.",
+        "enum": [
+          "SMART",
+          "EXHAUSTIVE"
+        ]
+      },
+      "ModeEnum": {
+        "type": "string",
+        "description": "If ENTERPRISE, then enterprise mode is enabled and more features are available for the user.",
+        "enum": [
+          "STANDARD",
+          "ENTERPRISE"
+        ]
+      },
+      "RateLimit": {
+        "required": [
+          "effective_value",
+          "is_inherited"
+        ],
+        "type": "object",
+        "properties": {
+          "effective_value": {
+            "type": "integer",
+            "description": "The rate limit value in effect for this analysis profile.",
+            "example": 200
+          },
+          "is_inherited": {
+            "type": "boolean",
+            "description": "True if the effective value is inherited from parent analysis profile, false otherwise."
+          }
+        },
+        "description": "Maximum number of requests per second sent to the server during scanning."
+      },
+      "MaxBrowsers": {
+        "required": [
+          "effective_value",
+          "is_inherited"
+        ],
+        "type": "object",
+        "properties": {
+          "effective_value": {
+            "type": "integer",
+            "description": "The maximum concurrent browsers value in effect for this analysis profile.",
+            "example": 4,
+            "default": 4
+          },
+          "is_inherited": {
+            "type": "boolean",
+            "description": "True if the effective value is inherited from parent analysis profile, false otherwise.",
+            "default": false
+          }
+        },
+        "description": "Maximum number of browsers during scanning."
+      },
+      "SimilarityThreshold": {
+        "required": [
+          "effective_value",
+          "is_inherited"
+        ],
+        "type": "object",
+        "properties": {
+          "effective_value": {
+            "type": "number",
+            "description": "The similarity threshold value in effect for this analysis profile.",
+            "format": "double",
+            "example": 0.95,
+            "default": 0.95
+          },
+          "is_inherited": {
+            "type": "boolean",
+            "description": "True if the effective value is inherited from parent Analysis Profile, false otherwise."
+          }
+        },
+        "description": "Setting for how alike pages should be scanned."
+      },
+      "DirectoryRestrictions": {
+        "required": [
+          "effective_value",
+          "is_inherited"
+        ],
+        "type": "object",
+        "properties": {
+          "effective_value": {
+            "$ref": "#/components/schemas/DirectoryRestrictionsEnum"
+          },
+          "is_inherited": {
+            "type": "boolean",
+            "description": "True if the effective value is inherited from parent Analysis Profile, false otherwise."
+          }
+        },
+        "description": "Directory restrictions."
+      },
+      "DirectoryRestrictionsEnum": {
+        "type": "string",
+        "description": "Enum for directory restrictions",
+        "nullable": true,
+        "enum": [
+          "DIR_AND_SUBDIR",
+          "DIR_ONLY",
+          "NO_RESTRICTIONS"
+        ]
+      },
+      "EnableAllTargetProtocols": {
+        "required": [
+          "effective_value",
+          "is_inherited"
+        ],
+        "type": "object",
+        "properties": {
+          "effective_value": {
+            "type": "boolean",
+            "description": "True if EnableAllTargetProtocols is enabled"
+          },
+          "is_inherited": {
+            "type": "boolean",
+            "description": "True if the effective value is inherited from parent Analysis Profile, false otherwise."
+          }
+        },
+        "description": "EnableAllTargetProtocols boolean."
+      },
+      "MaxDuration": {
+        "required": [
+          "effective_value",
+          "is_inherited"
+        ],
+        "type": "object",
+        "properties": {
+          "effective_value": {
+            "type": "integer",
+            "description": "The maximum duration value in effect for this analysis profile.",
+            "example": 4320
+          },
+          "is_inherited": {
+            "type": "boolean",
+            "description": "True if the effective value is inherited from parent analysis profile, false otherwise."
+          }
+        },
+        "description": "Maximum duration for scan in minutes."
+      },
+      "MaxCrawlDuration": {
+        "required": [
+          "effective_value",
+          "is_inherited"
+        ],
+        "type": "object",
+        "properties": {
+          "effective_value": {
+            "type": "integer",
+            "description": "The maximum crawl duration in effect for this analysis profile.",
+            "example": 4320
+          },
+          "is_inherited": {
+            "type": "boolean",
+            "description": "True if the effective value is inherited from parent analysis profile, false otherwise."
+          }
+        },
+        "description": "Maximum crawl duration for a scan in minutes."
+      },
+      "CrawlConfigurationRequest": {
+        "type": "object",
+        "properties": {
+          "advanced_scan": {
+            "type": "boolean",
+            "description": "If true, it scans only what is specified in the crawl script. If false, it scans using the automated crawl engine.",
+            "nullable": true
+          },
+          "script": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Script"
+              }
+            ]
+          }
+        },
+        "description": "The crawl script request configuration for a URL scan."
+      },
+      "ScopeRule": {
+        "required": [
+          "http_method",
+          "scope_rule_index",
+          "scope_rule_type",
+          "scope_type",
+          "url",
+          "uuid"
+        ],
+        "type": "object",
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "description": "Scope rule UUID."
+          },
+          "http_method": {
+            "type": "string",
+            "description": "Enterprise mode HTTP method for API scans."
+          },
+          "url": {
+            "type": "string",
+            "description": "Enterprise mode URL for API scans."
+          },
+          "scope_type": {
+            "$ref": "#/components/schemas/ScopeTypeEnum"
+          },
+          "scope_rule_type": {
+            "$ref": "#/components/schemas/ScopeRuleTypeEnum"
+          },
+          "scope_rule_index": {
+            "type": "integer"
+          }
+        },
+        "description": "Enterprise mode scope rule for API scans."
+      },
+      "ScopeTypeEnum": {
+        "type": "string",
+        "description": "Enterprise mode scope type for API scans.",
+        "enum": [
+          "AUDIT",
+          "BLOCK",
+          "IGNORE"
+        ]
+      },
+      "ScopeRuleTypeEnum": {
+        "type": "string",
+        "description": "Enterprise mode scope rule type for API scans.",
+        "enum": [
+          "PATTERN",
+          "INDEX"
+        ]
+      },
+      "CrawlConfiguration": {
+        "type": "object",
+        "properties": {
+          "advanced_scan": {
+            "type": "boolean",
+            "description": "If true the scan uses only what is specified in the crawl script. If false, the scan uses the automated crawl engine."
+          },
+          "script": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Script"
+              }
+            ]
+          },
+          "number_scripts": {
+            "type": "integer",
+            "description": "Number of crawl scripts. Present only in response, ignored in request."
+          }
+        },
+        "description": "The crawl script configuration for a URL scan."
+      },
+      "AnalysisProfileUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "allowed_urls": {
+            "type": "array",
+            "description": "List of URL allowed.",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "denied_urls": {
+            "type": "array",
+            "description": "List of URL denied.",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "seed_urls": {
+            "type": "array",
+            "description": "List of seed URL.",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "grouped_urls": {
+            "type": "array",
+            "description": "List of group URL.",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "crawler_mode": {
+            "$ref": "#/components/schemas/CrawlerModeEnum"
+          },
+          "rate_limit": {
+            "maximum": 1000000000,
+            "minimum": 50,
+            "type": "integer",
+            "description": "Maximum number of requests per second sent to the server during scanning.",
+            "example": 200
+          },
+          "max_duration": {
+            "maximum": 129599,
+            "minimum": 50,
+            "type": "integer",
+            "description": "Maximum duration for scan in minutes.",
+            "example": 4320
+          },
+          "max_crawl_duration": {
+            "maximum": 129599,
+            "minimum": 1,
+            "type": "integer",
+            "description": "Maximum crawl duration for a scan in minutes.",
+            "example": 4320
+          },
+          "max_browsers": {
+            "maximum": 12,
+            "minimum": 1,
+            "type": "integer",
+            "description": "The maximum number of concurrent browsers for a scan.",
+            "example": 3
+          },
+          "scope_rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScopeRule"
+            }
+          },
+          "similarity_threshold": {
+            "maximum": 0.99,
+            "minimum": 0.6,
+            "type": "number",
+            "description": "The similarity threshold value in effect for this analysis profile.",
+            "format": "double",
+            "example": 0.95
+          },
+          "directory_restrictions": {
+            "$ref": "#/components/schemas/DirectoryRestrictionsEnum"
+          },
+          "enable_all_target_protocols": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AnalysisProfileUpdateParentRequest": {
+        "required": [
+          "parent_analysis_profile_id"
+        ],
+        "type": "object",
+        "properties": {
+          "parent_analysis_profile_id": {
+            "type": "string",
+            "description": "ID of the parent analysis profile."
+          }
+        }
+      },
+      "AnalysisProfileListItem": {
+        "required": [
+          "analysis_profile_id",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "analysis_profile_id": {
+            "type": "string",
+            "description": "ID of the analysis profile."
+          },
+          "target_id": {
+            "type": "string",
+            "description": "ID of the target associated with analysis profile."
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the analysis profile."
+          }
+        }
+      },
+      "EmbeddedAnalysisProfile": {
+        "required": [
+          "analysis_profiles"
+        ],
+        "type": "object",
+        "properties": {
+          "analysis_profiles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalysisProfileListItem"
+            }
+          }
+        }
+      },
+      "PagedAnalysisProfiles": {
+        "required": [
+          "page"
+        ],
+        "type": "object",
+        "properties": {
+          "_embedded": {
+            "$ref": "#/components/schemas/EmbeddedAnalysisProfile"
+          },
+          "_links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Link"
+            }
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageMeta"
+          }
+        }
+      },
+      "AssignableParentAnalysisProfile": {
+        "required": [
+          "analysis_profile_id",
+          "name",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "analysis_profile_id": {
+            "$ref": "#/components/schemas/UUIDWithoutHyphens"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the analysis profile."
+          },
+          "type": {
+            "$ref": "#/components/schemas/AnalysisProfileType"
+          },
+          "scanners": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScannerValue"
+            }
+          }
+        }
+      },
+      "UUIDWithoutHyphens": {
+        "type": "string",
+        "description": "A UUID string without hyphens.\n",
+        "format": "^[0-9a-fA-F]{32}$"
+      },
+      "username": {
+        "maxLength": 255,
+        "minLength": 1,
+        "pattern": "^[\\p{L}\\p{Nl}\\p{Nd}\\p{Print}]*$",
+        "type": "string",
+        "description": "Username of the authentication.\n"
+      },
+      "password": {
+        "maxLength": 255,
+        "minLength": 1,
+        "type": "string",
+        "description": "Password of the authentication.\n"
+      },
+      "login_url": {
+        "type": "string",
+        "description": "Application login URL for the form-based application authentication.\n"
+      },
+      "enable_ai_login": {
+        "type": "boolean",
+        "description": "Toggle that enables the use of AI to generate login scripts for form-based application authentication.\n"
+      },
+      "base64_pkcs12": {
+        "maxLength": 5000000,
+        "minLength": 50,
+        "type": "string",
+        "description": "description: Encoded, Base64 certificate file. File format must be PFX or P12.\n"
+      },
+      "cert_name": {
+        "type": "string",
+        "description": "Name of the certificate.\n"
+      },
+      "Script": {
+        "type": "object",
+        "properties": {
+          "script_name": {
+            "type": "string",
+            "description": "Script name."
+          },
+          "script_type": {
+            "$ref": "#/components/schemas/ScriptTypeEnum"
+          },
+          "script_body": {
+            "type": "string",
+            "description": "Script body."
+          }
+        }
+      },
+      "ScriptTypeEnum": {
+        "type": "string",
+        "description": "The type of script. Selenium and JavaScript are the only supported formats. Both JSON and HTML-formatted Selenium scripts are supported. However, not all commands may be supported. A validation error is reported if an unsupported command is used.\n",
+        "nullable": true,
+        "enum": [
+          "SELENIUM",
+          "JAVASCRIPT"
+        ]
+      },
+      "oauth_access_token_url": {
+        "type": "string",
+        "description": "Access token URL.",
+        "format": "uri"
+      },
+      "oauth_client_id": {
+        "type": "string",
+        "description": "Client ID."
+      },
+      "oauth_client_secret": {
+        "type": "string",
+        "description": "Client secret. Optional for password grant type."
+      },
+      "oauth_authorization_url": {
+        "type": "string",
+        "description": "Authorization URL.",
+        "format": "uri"
+      },
+      "oauth_grant_type": {
+        "$ref": "#/components/schemas/OAuth2GrantType"
+      },
+      "oauth_username": {
+        "type": "string",
+        "description": "Username for password credentials grant type."
+      },
+      "oauth_password": {
+        "type": "string",
+        "description": "Password for password credentials grant type."
+      },
+      "oauth_redirect_url": {
+        "type": "string",
+        "description": "Redirect URL.",
+        "format": "uri"
+      },
+      "oauth_scope": {
+        "type": "string",
+        "description": "Scope for the specified access token. Separate multiple values with spaces."
+      },
+      "oauth_use_openid_connect": {
+        "type": "boolean",
+        "description": "Set to true to use OpenID Connect. The OpenID Connect URL replaces the access token URL and authorization URL for grant types.",
+        "example": true
+      },
+      "oauth_openid_url": {
+        "type": "string",
+        "description": "Enter the OpenID Connect URL to use when use_openid_connect is true.",
+        "format": "uri"
+      },
+      "AnalysisRun": {
+        "required": [
+          "analysis_run_id",
+          "max_crawl_duration",
+          "max_duration",
+          "scan_number",
+          "scan_type",
+          "started_at",
+          "started_by_name",
+          "target_id",
+          "target_protocol",
+          "url"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The ID of the analysis run.",
+            "deprecated": true
+          },
+          "analysis_run_id": {
+            "type": "string",
+            "description": "The ID of the Analysis Run."
+          },
+          "project_uuid": {
+            "type": "string",
+            "description": "The target ID of analysis run.",
+            "deprecated": true
+          },
+          "target_id": {
+            "type": "string",
+            "description": "The ID of the Dynamic Target associated with this Analysis Run."
+          },
+          "scan_number": {
+            "type": "integer",
+            "description": "The specific analysis run number associated with a target."
+          },
+          "started_at": {
+            "type": "string",
+            "description": "The timestamp of when the analysis run started."
+          },
+          "finished_at": {
+            "type": "string",
+            "description": "The timestamp of when the Analysis Run finished."
+          },
+          "url": {
+            "type": "string",
+            "description": "The target URL of analysis run."
+          },
+          "protocol": {
+            "type": "integer",
+            "description": "The target protocol code of analysis run.",
+            "deprecated": true
+          },
+          "target_protocol": {
+            "type": "string",
+            "description": "The target protocol of the Analysis Run.",
+            "enum": [
+              "HTTP",
+              "HTTPS"
+            ]
+          },
+          "scan_type": {
+            "type": "string",
+            "description": "Dynamic Target scan type. Values are QUICK and ENTERPRISE for enterprise scan.\n",
+            "enum": [
+              "QUICK",
+              "ENTERPRISE"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "environment": {
+            "type": "integer",
+            "description": "The target scan type code of analysis run.",
+            "deprecated": true
+          },
+          "started_by": {
+            "type": "integer",
+            "description": "The user ID of the user that started the analysis run.",
+            "deprecated": true
+          },
+          "started_by_name": {
+            "type": "string",
+            "description": "The name of the user that started the Analysis Run."
+          },
+          "estimated_duration": {
+            "type": "integer",
+            "description": "The estimated duration for the analysis run.",
+            "deprecated": true
+          },
+          "max_cvss": {
+            "type": "number",
+            "description": "Highest CVSS flaw found in the Analysis Run."
+          },
+          "max_duration": {
+            "type": "integer",
+            "description": "The maximum duration in effect for the Analysis Run."
+          },
+          "max_crawl_duration": {
+            "type": "integer",
+            "description": "The maximum crawl duration in effect for the Analysis Run."
+          },
+          "result_import_status": {
+            "$ref": "#/components/schemas/ResultImportStatus"
+          }
+        }
+      },
+      "ResultImportStatus": {
+        "type": "string",
+        "description": "The status of the process of importing analysis run results into a linked application.",
+        "example": "COMPLETED",
+        "enum": [
+          "POLLING",
+          "REQUESTED",
+          "INPROGRESS",
+          "COMPLETED",
+          "FAILED",
+          "IGNORED",
+          "INVALID",
+          "ERROR"
+        ]
+      },
+      "ScannerProfile": {
+        "required": [
+          "analysis_profile_id",
+          "parent_analysis_profile_id",
+          "scanners"
+        ],
+        "type": "object",
+        "properties": {
+          "analysis_profile_id": {
+            "type": "string",
+            "description": "ID of the analysis profile."
+          },
+          "parent_analysis_profile_id": {
+            "type": "string",
+            "description": "ID of the parent analysis profile."
+          },
+          "scanners": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScannerValue"
+            }
+          }
+        }
+      },
+      "ScannerProfileUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "scanners": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScannerUpdateValue"
+            }
+          }
+        }
+      },
+      "ScannerValue": {
+        "required": [
+          "effective_value",
+          "id",
+          "is_editable",
+          "is_inherited"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/ScannerType"
+          },
+          "effective_value": {
+            "type": "boolean",
+            "description": "True if this scanner is enabled."
+          },
+          "is_inherited": {
+            "type": "boolean",
+            "description": "True if the effective value is inherited from parent analysis profile, false otherwise."
+          },
+          "is_editable": {
+            "type": "boolean",
+            "description": "True if the effective value is editable for this analysis profile."
+          }
+        },
+        "description": "Settings for a scanner in an analysis profile."
+      },
+      "ScannerUpdateValue": {
+        "required": [
+          "id",
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/ScannerType"
+          },
+          "value": {
+            "type": "boolean",
+            "description": "True if this scanner is enabled."
+          }
+        },
+        "description": "Update value for a specific scanner."
+      },
+      "ScannerType": {
+        "type": "string",
+        "description": "Type of the scanner.",
+        "enum": [
+          "fingerprinting",
+          "ssl",
+          "http_header",
+          "portscan",
+          "fuzzer",
+          "sql_injection",
+          "xss",
+          "file_inclusion",
+          "deserialization",
+          "xxe",
+          "command_injection",
+          "privilege_escalation",
+          "csrf",
+          "ldap_injection",
+          "common_login",
+          "trace_method",
+          "code_injection",
+          "unsecured_login",
+          "clickjacking",
+          "ssti",
+          "obsolete_resource",
+          "insecure_jwt",
+          "backup_file",
+          "error_pattern",
+          "open_redirect",
+          "ssrf",
+          "webserver_dir_list",
+          "http_resp_split",
+          "view_state",
+          "file_upload",
+          "flash",
+          "file_dir_exposure",
+          "url_session",
+          "struts2",
+          "malicious_host"
+        ]
+      },
+      "AnalysisProfileType": {
+        "type": "string",
+        "description": "The type of an analysis profile.",
+        "enum": [
+          "TARGET",
+          "ORG",
+          "SYSTEM"
+        ]
+      },
+      "ParameterAuthenticationType": {
+        "type": "string",
+        "enum": [
+          "GET_PARAMETER",
+          "HTTP_HEADER",
+          "COOKIE",
+          "LOCAL_STORAGE",
+          "SESSION_STORAGE"
+        ]
+      },
+      "ParameterAuthentication": {
+        "required": [
+          "key",
+          "title",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUIDWithoutHyphens"
+          },
+          "title": {
+            "maxLength": 255,
+            "minLength": 1,
+            "type": "string",
+            "description": "The title of the parameter authentication."
+          },
+          "type": {
+            "$ref": "#/components/schemas/ParameterAuthenticationType"
+          },
+          "key": {
+            "maxLength": 255,
+            "minLength": 1,
+            "type": "string",
+            "description": "The key of the parameter authentication."
+          },
+          "value": {
+            "maxLength": 10000,
+            "minLength": 1,
+            "type": "string",
+            "description": "The value of the parameter authentication."
+          }
+        }
+      },
+      "ParameterAuthentications": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ParameterAuthentication"
+        }
+      },
+      "EffectiveParameterAuthentications": {
+        "required": [
+          "effective_value",
+          "is_inherited"
+        ],
+        "type": "object",
+        "properties": {
+          "effective_value": {
+            "$ref": "#/components/schemas/ParameterAuthentications"
+          }
+        },
+        "nullable": true,
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/InheritableValue"
+          }
+        ]
+      },
+      "ParameterAuthenticationsUpdateRequest": {
+        "type": "array",
+        "description": "The parameter authentication list update request.\n",
+        "items": {
+          "$ref": "#/components/schemas/ParameterAuthentication"
+        }
+      },
+      "ScannerVariableEvaluationMode": {
+        "type": "string",
+        "description": "Specifies the evaluation mode of the scanner variable. 'TOTP' for Time-Based One-Time Password and 'RAW' for as-is evaluation.",
+        "enum": [
+          "RAW",
+          "TOTP"
+        ],
+        "default": "RAW"
+      },
+      "ScannerVariableUtilizeInAiAssistedLogin": {
+        "type": "boolean",
+        "description": "Specifies whether the Scanner Variable can be utilized in the AI-Assisted Login. Set to true in order to utilize the Scanner Variable in AI-Assisted Login. Otherwise, set to false.",
+        "default": false
+      },
+      "ScannerVariable": {
+        "required": [
+          "reference_key",
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUIDWithoutHyphens"
+          },
+          "reference_key": {
+            "maxLength": 255,
+            "minLength": 1,
+            "type": "string",
+            "description": "The reference key of the scan engine variable."
+          },
+          "evaluation_mode": {
+            "$ref": "#/components/schemas/ScannerVariableEvaluationMode"
+          },
+          "utilize_in_ai_assisted_login": {
+            "$ref": "#/components/schemas/ScannerVariableUtilizeInAiAssistedLogin"
+          },
+          "value": {
+            "maxLength": 255,
+            "minLength": 1,
+            "type": "string",
+            "description": "The value of the scanner variable."
+          }
+        }
+      },
+      "EffectiveScannerVariables": {
+        "type": "array",
+        "description": "The list of effective scanner variables.",
+        "items": {
+          "$ref": "#/components/schemas/EffectiveScannerVariable"
+        }
+      },
+      "EffectiveScannerVariable": {
+        "required": [
+          "effective_value",
+          "is_inherited"
+        ],
+        "type": "object",
+        "properties": {
+          "effective_value": {
+            "$ref": "#/components/schemas/ScannerVariable"
+          }
+        },
+        "description": "The effective scanner variable.",
+        "nullable": true,
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/InheritableValue"
+          }
+        ]
+      },
+      "ScannerVariablesUpdateRequest": {
+        "type": "array",
+        "description": "Update request to the list of the scanner variables.",
+        "items": {
+          "$ref": "#/components/schemas/ScannerVariable"
+        }
+      },
+      "StopActionType": {
+        "type": "string",
+        "description": "The type of stop action.",
+        "enum": [
+          "STOP_DELETE",
+          "STOP_SAVE"
+        ],
+        "default": "STOP_DELETE"
+      },
+      "target_id_spec_body": {
+        "required": [
+          "specFile"
+        ],
+        "type": "object",
+        "properties": {
+          "specFile": {
+            "type": "string",
+            "description": "The API specification file must be in JSON, YAML, or HAR format.",
+            "format": "binary"
+          }
+        }
+      },
+      "inline_response_200": {
+        "nullable": true,
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AnalysisRun"
+          }
+        ]
+      }
+    },
+    "responses": {
+      "Problem400Response": {
+        "description": "Invalid request. If there is no response body, your request contains malformed JSON. \nIf there is a response body, Veracode could not validate your JSON payload. \nVerify the source attribute in each service error in the response and the associated code, and try again.\n",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            },
+            "example": {
+              "type": "urn:problem-type:veracode:dast:bad-request",
+              "title": "Bad Request",
+              "status": 400,
+              "detail": "There are one or more errors in the request",
+              "instance": "/api/v1/entity",
+              "errors": [
+                {
+                  "code": "ILLEGAL_ARGUMENT",
+                  "detail": "error detailed description"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "Problem500Response": {
+        "description": "Server-side error. Please try again later.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
+      "AnalysisProfile404Response": {
+        "description": "Unknown analysis profile identifier. Verify the analysis profile ID and try again.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
+      "Authentication404Response": {
+        "description": "Unknown analysis profile or authentication identifier. Verify the analysis profile ID and authentication ID and try again.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      }
+    },
+    "parameters": {
+      "PageNumber": {
+        "name": "page",
+        "in": "query",
+        "description": "Page number index to start pagination.",
+        "required": false,
+        "schema": {
+          "minimum": 0,
+          "type": "integer",
+          "default": 0
+        }
+      },
+      "PageLimit": {
+        "name": "limit",
+        "in": "query",
+        "description": "Number of records to return from pagination.",
+        "required": false,
+        "schema": {
+          "maximum": 200,
+          "minimum": 10,
+          "type": "integer",
+          "default": 10
+        }
+      },
+      "AnalysisProfileId": {
+        "name": "analysis_profile_id",
+        "in": "path",
+        "description": "ID of the analysis profile.",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/UUIDWithoutHyphens"
+        }
+      },
+      "PutMethod": {
+        "name": "method",
+        "in": "query",
+        "description": "If set to PATCH, updates the content to values in the request, but null values and absent attributes are ignored.",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "enum": [
+            "PATCH"
+          ]
+        }
+      }
+    }
+  }
+}
