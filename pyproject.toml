@@ -48,5 +48,9 @@ python_version = "3.11"
 strict = true
 packages = ["veracode_dast"]
 
+[[tool.mypy.overrides]]
+module = "veracode_api_signing.*"
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
