@@ -62,6 +62,22 @@ class ScopeRule:
             scope_rule_index=data["scope_rule_index"],
         )
 
+    def to_api(self) -> dict[str, Any]:
+        """Builds the request-body shape for this scope rule.
+
+        Returns:
+            A JSON-serializable representation, for use in
+            `AnalysisProfileUpdate.scope_rules`.
+        """
+        return {
+            "uuid": self.uuid,
+            "http_method": self.http_method,
+            "url": self.url,
+            "scope_type": self.scope_type.value,
+            "scope_rule_type": self.scope_rule_type.value,
+            "scope_rule_index": self.scope_rule_index,
+        }
+
 
 @dataclass(frozen=True)
 class ApiSpecification:

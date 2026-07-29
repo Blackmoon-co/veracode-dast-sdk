@@ -29,7 +29,12 @@ from veracode_dast.exceptions import (
     VeracodeTimeoutError,
     VeracodeValidationError,
 )
+from veracode_dast.services.analysis_profiles import AnalysisProfilesService
 from veracode_dast.services.api_specifications import ApiSpecificationsService
+from veracode_dast.services.authentications import AuthenticationsService
+from veracode_dast.services.ism_gateways import IsmGatewaysService
+from veracode_dast.services.scanner_variables import ScannerVariablesService
+from veracode_dast.services.scanners import ScannersService
 from veracode_dast.services.targets import TARGET_CONFIGURATION_SERVICE_BASE_URL, TargetsService
 from veracode_dast.services.teams import ADMIN_API_BASE_URL, TeamService
 
@@ -317,3 +322,8 @@ class VeracodeClient:
         tcs_http_client = HttpClient(base_url=TARGET_CONFIGURATION_SERVICE_BASE_URL, auth=auth)
         self.targets = TargetsService(tcs_http_client)
         self.api_specifications = ApiSpecificationsService(tcs_http_client)
+        self.analysis_profiles = AnalysisProfilesService(tcs_http_client)
+        self.scanners = ScannersService(tcs_http_client)
+        self.authentications = AuthenticationsService(tcs_http_client)
+        self.scanner_variables = ScannerVariablesService(tcs_http_client)
+        self.ism_gateways = IsmGatewaysService(tcs_http_client)

@@ -1,0 +1,17 @@
+{
+  "variables": [
+    {
+      "reference_key": "username",
+      "value": "admin"
+    },
+    {
+      "reference_key": "password",
+      "value": "secret123"
+    },
+    {
+      "reference_key": "otp",
+      "value": "ABCDEFGHIJKLMNOP",
+      "totp_seed": true
+    }
+  ]
+}
