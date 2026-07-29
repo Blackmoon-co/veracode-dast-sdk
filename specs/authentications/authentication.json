@@ -2,6 +2,6 @@
   "authentication": {
     "type": "basic",
     "username": "admin",
-    "password": "secret123"
+    "password": "123456789"
   }
 }
