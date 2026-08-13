@@ -3,10 +3,10 @@
 A reusable Python SDK for the [Veracode DAST](https://docs.veracode.com/r/DAST_Essentials_and_DAST_Advanced_API) REST API.
 
 > **Status:** Phase 1 MVP (Authentication, HTTP Client, Team Management,
-> Target Management, API Specification Management) and Phase 2 (Analysis
+> Target Management, API Specification Management), Phase 2 (Analysis
 > Profiles, Scanner Profiles, Authentications, Scanner Variables, ISM
-> Gateways) are implemented. See [AGENTS.md](AGENTS.md) for the project
-> vision, scope, and roadmap.
+> Gateways), and Phase 3 (Analysis Runs) are implemented. See
+> [AGENTS.md](AGENTS.md) for the project vision, scope, and roadmap.
 
 ## What this is
 
@@ -266,6 +266,86 @@ Runnable scripts in [examples/](examples/). Each requires
 | [`authentications_example.py`](examples/authentications_example.py) | Get the effective Authentication configuration, then configure one mechanism from an SDK Configuration file. |
 | [`scanner_variables_example.py`](examples/scanner_variables_example.py) | Get, then replace, an Analysis Profile's Scanner Variables from an SDK Configuration file. |
 | [`ism_gateway_example.py`](examples/ism_gateway_example.py) | List available ISM Gateways, assign one to a Target by name, then remove the assignment. |
+
+---
+
+## Phase 3 — Execute Scans
+
+Once a Target is configured (Phase 2), Phase 3 runs the scan itself: start
+an Analysis Run, monitor or wait for it to finish, stop it early if needed,
+and download the resulting report.
+
+| `VeracodeClient` attribute | Veracode API                      | Base URL                                          |
+| --------------------------- | ---------------------------------- | -------------------------------------------------- |
+| `client.analysis_runs`      | DAST Target Configuration Service | `https://api.veracode.com/dae/api/tcs-api/api/v1` |
+
+- **Analysis Runs** (`client.analysis_runs`) — `start`/`stop`/`list`/`get` an
+  Analysis Run for an existing Target, `wait_for_completion` to block until
+  it reaches a terminal status, and `get_report` to download the report
+  (PDF, CSV, or JUnit) for a specific run.
+
+### Running a scan
+
+```python
+target = client.targets.get_by_name("My API")
+
+run = client.analysis_runs.start(target.target_id)
+
+finished = client.analysis_runs.wait_for_completion(
+    target.target_id, run.analysis_run_id, poll_interval=15, timeout=3600
+)
+print(finished.status)  # TargetStatus.FINISHED / STOPPED / FAILED
+
+client.analysis_runs.get_report(
+    target.target_id, finished.analysis_run_id, "pdf", "scan-report.pdf"
+)
+```
+
+`wait_for_completion()`'s terminal statuses are `FINISHED`, `STOPPED`, and
+`FAILED` (`RUNNING`/`STOPPING` keep it polling). `timeout` is a *soft*
+bound — it's only checked once per poll, so it can be exceeded by up to
+roughly one `poll_interval` plus one HTTP request — and raises
+`AnalysisRunTimeoutError` once exceeded.
+
+### Stopping a scan early
+
+```python
+from veracode_dast.models.analysis_run import StopActionType
+
+client.analysis_runs.stop(target.target_id, action=StopActionType.STOP_SAVE)
+```
+
+`action` defaults to `StopActionType.STOP_DELETE` and also accepts a plain
+string (`action="STOP_SAVE"`), validated the same way as `get_report()`'s
+`format`.
+
+### Phase 3 examples
+
+Runnable scripts in [examples/](examples/). Each requires
+`VERACODE_API_KEY_ID` / `VERACODE_API_KEY_SECRET`:
+
+| Script | What it shows |
+| --- | --- |
+| [`analysis_runs_example.py`](examples/analysis_runs_example.py) | Resolve a Target by name, start (or reuse) an Analysis Run, wait for completion, optionally download a report, or stop the run instead. |
+
+```bash
+# Run a scan by Target name (resolved via TargetsService.get_by_name)
+python examples/analysis_runs_example.py --target-name "sdk-demo"
+
+# Run a scan and download a report
+python examples/analysis_runs_example.py --target-name "sdk-demo" \
+  --report pdf --output ./report.pdf
+
+# Run a scan by Target ID instead of name
+python examples/analysis_runs_example.py --target-id <existing-target-id>
+
+# Inspect an existing Analysis Run instead of starting a new one
+python examples/analysis_runs_example.py --target-name "sdk-demo" \
+  --analysis-run-id <existing-run-id>
+
+# Stop a running Analysis Run instead of waiting for completion
+python examples/analysis_runs_example.py --target-name "sdk-demo" --stop
+```
 
 ---
 

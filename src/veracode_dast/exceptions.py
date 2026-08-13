@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from veracode_dast.models.target import TargetStatus
+
 
 class VeracodeSDKError(Exception):
     """Root of every exception raised by this SDK."""
@@ -437,4 +439,60 @@ class GatewayNameNotUniqueError(VeracodeSDKError):
         self.matches = matches
         super().__init__(
             f"Multiple ISM Gateways are named '{name}'; cannot resolve unambiguously."
+        )
+
+
+class AnalysisRunValidationError(VeracodeSDKError):
+    """Raised for SDK-level Analysis Run parameter validation failures.
+
+    Attributes:
+        rule: A short identifier of which validation rule failed.
+    """
+
+    def __init__(self, message: str, *, rule: str) -> None:
+        """Initializes the error.
+
+        Args:
+            message: A human-readable description of the failure.
+            rule: A short identifier of which validation rule failed.
+        """
+        self.rule = rule
+        super().__init__(message)
+
+
+class AnalysisRunTimeoutError(VeracodeSDKError):
+    """Raised when `wait_for_completion()` exceeds its `timeout` before the
+    Analysis Run reaches a terminal status.
+
+    Attributes:
+        target_id: The target's unique identifier.
+        analysis_run_id: The analysis run's unique identifier.
+        elapsed: Seconds elapsed before the timeout fired.
+        last_status: The last observed status, or None if no successful
+            `get()` call completed before the timeout.
+    """
+
+    def __init__(
+        self,
+        target_id: str,
+        analysis_run_id: str,
+        *,
+        elapsed: float,
+        last_status: TargetStatus | None,
+    ) -> None:
+        """Initializes the error.
+
+        Args:
+            target_id: The target's unique identifier.
+            analysis_run_id: The analysis run's unique identifier.
+            elapsed: Seconds elapsed before the timeout fired.
+            last_status: The last observed status, or None.
+        """
+        self.target_id = target_id
+        self.analysis_run_id = analysis_run_id
+        self.elapsed = elapsed
+        self.last_status = last_status
+        super().__init__(
+            f"Analysis run {analysis_run_id} did not reach a terminal status "
+            f"within {elapsed:.0f}s (last status: {last_status})"
         )
