@@ -26,6 +26,15 @@ def test_from_api_evaluation_mode_absent_defaults_to_raw() -> None:
     assert variable.id is None
 
 
+def test_from_api_value_absent_is_none() -> None:
+    # The API stores values write-only and omits them on read-back.
+    variable = ScannerVariable.from_api(
+        {"effective_value": {"reference_key": "password"}, "is_inherited": False}
+    )
+    assert variable.value is None
+    assert variable.reference_key == "password"
+
+
 def test_to_api_maps_totp_seed_to_evaluation_mode() -> None:
     assert ScannerVariable(reference_key="otp", value="x", totp_seed=True).to_api() == {
         "reference_key": "otp",

@@ -4,6 +4,12 @@ metadata) always runs. Phase 2 steps (Analysis Profile rate_limit/
 max_duration, Scanner Profiles, Authentications, Scanner Variables) are
 each optional and only run if their corresponding flag is passed.
 
+Veracode fetches api_specification_file_url synchronously while creating an
+API target, so it must be a real, reachable OpenAPI URL - a fabricated one
+makes the origin return 502. If you only have a local file, leave
+--spec-url unset: a known-good public spec is used just to get the target
+created, then --spec-file is uploaded over it.
+
 Requires VERACODE_API_KEY_ID and VERACODE_API_KEY_SECRET to be set.
 
 Usage:
@@ -35,6 +41,11 @@ from veracode_dast.models.target import (
 )
 
 
+# A public OpenAPI Veracode can always GET, used to satisfy target creation
+# when the caller has no hosted spec of their own. Replaced by --spec-file.
+BOOTSTRAP_SPEC_URL = "https://petstore3.swagger.io/api/v3/openapi.json"
+
+
 def _as_json(obj: Any) -> str:
     if isinstance(obj, list):
         return json.dumps([dataclasses.asdict(o) for o in obj], indent=2)
@@ -61,7 +72,14 @@ def main() -> None:
     parser.add_argument("--team-name", required=True)
     parser.add_argument("--target-name", required=True)
     parser.add_argument("--target-url", required=True)
-    parser.add_argument("--spec-file", required=True)
+    parser.add_argument("--spec-file", required=True, help="Local OpenAPI JSON/YAML/HAR")
+    parser.add_argument(
+        "--spec-url",
+        default=None,
+        help="Hosted OpenAPI URL Veracode fetches at create time. "
+        f"Defaults to a public bootstrap spec ({BOOTSTRAP_SPEC_URL}); "
+        "--spec-file is uploaded over it afterwards.",
+    )
     parser.add_argument(
         "--target-type", type=TargetType, choices=list(TargetType), default=TargetType.API
     )
@@ -83,7 +101,8 @@ def main() -> None:
     team = client.teams.get_by_name(args.team_name)
     print(json.dumps(dataclasses.asdict(team), indent=2))
 
-    spec_url = f"https://{args.target_url}/openapi.yaml"
+    spec_url = args.spec_url or BOOTSTRAP_SPEC_URL
+    print(f"Creating target with api_specification_file_url={spec_url}")
     target = client.targets.ensure(
         TargetCreate(
             name=args.target_name,
@@ -110,6 +129,8 @@ def main() -> None:
 
     client.api_specifications.upload(target.target_id, args.spec_file)
     spec = client.api_specifications.get(target.target_id)
+    # If api_spec_name/type reflect the local file (not the bootstrap URL),
+    # upload() replaced the spec and no hosted URL of your own is needed.
     print(json.dumps(dataclasses.asdict(spec), indent=2))
 
     # --- Phase 2: Analysis Profile, Scanners, Authentication, Scanner Variables ---

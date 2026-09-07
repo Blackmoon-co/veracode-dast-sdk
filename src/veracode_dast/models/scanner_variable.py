@@ -21,7 +21,9 @@ class ScannerVariable:
         reference_key: The name authentication mechanisms use to look up
             this variable's value.
         value: The variable's value (e.g. a username, password, or TOTP
-            seed). Never logged.
+            seed). Never logged. `None` on a model parsed from a
+            `get()`/`update()` response — the API stores values write-only
+            and never echoes them back.
         totp_seed: Whether `value` is a TOTP seed evaluated by Veracode at
             scan time, rather than used as-is. The SDK's simplified
             boolean over the API's `evaluation_mode` field (`TOTP`/`RAW`).
@@ -33,7 +35,7 @@ class ScannerVariable:
     """
 
     reference_key: str
-    value: str
+    value: str | None = None
     totp_seed: bool = False
     is_inherited: bool = False
     id: str | None = None
@@ -52,7 +54,7 @@ class ScannerVariable:
         inner = data["effective_value"]
         return cls(
             reference_key=inner["reference_key"],
-            value=inner["value"],
+            value=inner.get("value"),  # write-only server-side; absent on read-back
             totp_seed=inner.get("evaluation_mode") == "TOTP",
             is_inherited=data["is_inherited"],
             id=inner.get("id"),

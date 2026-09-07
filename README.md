@@ -54,8 +54,9 @@ and exposes one attribute per resource on top of it:
   scanned application/API), plus idempotent `ensure`/`update_by_name`/`exists`
   helpers for pipelines.
 - **API Specification Management** (`client.api_specifications`) — upload,
-  fetch metadata for, and download the OpenAPI/Postman/HAR file backing an
-  `API`-type Target.
+  fetch metadata for, and download the OpenAPI (JSON/YAML) or HAR file
+  backing an `API`-type Target. Postman collections are not accepted —
+  convert to OpenAPI first.
 
 ### Quick start
 
@@ -102,6 +103,53 @@ client.targets.delete(target.target_id)  # teardown, e.g. on environment destroy
 absent. Use `update_by_name()` explicitly when a pipeline needs to change a
 previously-provisioned target's configuration.
 
+### API target when you only have a local OpenAPI
+
+Creating an `API` target requires `api_specification_file_url`, and Veracode
+**downloads and parses that URL synchronously while the target is created**.
+A fabricated or unreachable URL fails the whole `create()` call with a
+Cloudflare `502` (`origin_bad_gateway`) — not a clean validation error. So
+you can't create an API target by pointing at your application's own URL
+when that URL doesn't serve a spec.
+
+`api_specifications.upload()` (`POST /targets/{id}/spec`) **fully replaces**
+whatever `create()` fetched: afterwards `api_spec_url` is `null`,
+`api_spec_name` is the uploaded file's name, and the scan scope is
+regenerated from the uploaded document (verified against the live API,
+2026-09-07).
+
+So when your spec exists only as a local file, create the target with any
+always-reachable public OpenAPI as a throwaway bootstrap, then upload the
+real file over it — nothing of yours needs to be hosted:
+
+```python
+BOOTSTRAP = "https://petstore3.swagger.io/api/v3/openapi.json"  # or your own always-up spec
+
+target = client.targets.ensure(
+    TargetCreate(
+        name="client-api-1",
+        url="api.client.com",              # the real host to scan; need not serve a spec
+        protocol=Protocol.HTTPS,
+        target_type=TargetType.API,
+        scan_type=ScanType.ENTERPRISE,
+        authorized_to_scan=True,
+        is_sec_lead_only=False,
+        teams=[team.team_id],
+        api_specification_file_url=BOOTSTRAP,   # only needs to be reachable during create()
+    )
+)
+client.api_specifications.upload(target.target_id, "client-openapi.json")  # replaces the bootstrap
+assert client.api_specifications.get(target.target_id).api_spec_url is None
+```
+
+A Postman collection is **not** an accepted spec format — convert it first
+(`npx postman-to-openapi collection.json -o openapi.yaml`) or capture a HAR.
+
+The runnable version is
+[`scan_api_with_local_openapi_example.py`](examples/scan_api_with_local_openapi_example.py)
+(`--bootstrap-spec-url` overrides the default). `end_to_end_workflow_example.py`
+does the same when its `--spec-url` flag is omitted.
+
 ### Phase 1 examples
 
 Runnable scripts in [examples/](examples/). Each requires
@@ -114,6 +162,7 @@ Runnable scripts in [examples/](examples/). Each requires
 | [`team_management_example.py`](examples/team_management_example.py) | Resolves a Team by name to its `team_id`. |
 | [`target_management_example.py`](examples/target_management_example.py) | Full Target lifecycle: `ensure` → `update_by_name` → `delete`. |
 | [`api_specification_management_example.py`](examples/api_specification_management_example.py) | Upload, get metadata, and download an API Specification for an existing Target. |
+| [`scan_api_with_local_openapi_example.py`](examples/scan_api_with_local_openapi_example.py) | Create an API target whose real URL serves no OpenAPI, using only a local spec file (bootstrap URL + `upload()`). |
 | [`end_to_end_workflow_example.py`](examples/end_to_end_workflow_example.py) | The full Phase 1 flow in one script: resolve a Team, `ensure`/update a Target, upload its spec, read the spec back — output as JSON. |
 
 ```bash
@@ -121,6 +170,11 @@ python examples/end_to_end_workflow_example.py \
   --team-name "Development" --target-name "My API" \
   --target-url api.example.com --spec-file examples/sample-openapi.yaml \
   --target-type API --scan-type ENTERPRISE
+
+# API target when the spec exists only locally (real URL serves no OpenAPI):
+python examples/scan_api_with_local_openapi_example.py \
+  --team-name "Development" --target-name "client-api-1" \
+  --target-url api.client.com --spec-file ./client-openapi.json
 ```
 
 ---
