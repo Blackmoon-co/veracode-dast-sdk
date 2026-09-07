@@ -1,5 +1,7 @@
 # veracode-dast-sdk
 
+**English** · [Español](README.es.md)
+
 A reusable Python SDK for the [Veracode DAST](https://docs.veracode.com/r/DAST_Essentials_and_DAST_Advanced_API) REST API.
 
 > **Status:** Phase 1 MVP (Authentication, HTTP Client, Team Management,
