@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import ast; ast.parse\\(open\\('examples/end_to_end_workflow_example.py'\\).read\\(\\)\\); print\\('syntax ok'\\)\")",
+      "Bash(VERACODE_API_KEY_ID= VERACODE_API_KEY_SECRET= python examples/end_to_end_workflow_example.py --help)",
+      "Bash(python -m pytest -q)",
+      "Bash(python -c ' *)",
+      "Bash(python -m pytest -q tests/models/test_scanner_variable.py tests/services/test_scanner_variables.py)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('examples/test_upload_replaces_bootstrap.py'\\).read\\(\\)\\); print\\('syntax ok'\\)\")",
+      "Bash(VERACODE_API_KEY_ID= VERACODE_API_KEY_SECRET= python examples/test_upload_replaces_bootstrap.py --help)",
+      "Bash(gh auth *)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('examples/test_upload_replaces_bootstrap.py'\\).read\\(\\)\\); print\\('ok'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('examples/scan_api_with_local_openapi_example.py'\\).read\\(\\)\\); print\\('syntax ok'\\)\")",
+      "Bash(python examples/scan_api_with_local_openapi_example.py --help)",
+      "Bash(grep -c '```' README.md)"
+    ]
+  }
+}

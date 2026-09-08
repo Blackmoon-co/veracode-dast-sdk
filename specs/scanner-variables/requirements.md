@@ -348,9 +348,13 @@ as real Python types, so a malformed configuration is caught by my editor
 and by `mypy` instead of at runtime inside Veracode's API.
 
 4.1. THE SYSTEM SHALL define `ScannerVariable` as a frozen dataclass with
-fields `reference_key: str`, `value: str`, `totp_seed: bool = False`,
-`is_inherited: bool = False`, `id: str | None = None` (§3.1.2, §3.1.3),
-with `from_api()` and `to_api()` methods (§7).
+fields `reference_key: str`, `value: str | None = None`,
+`totp_seed: bool = False`, `is_inherited: bool = False`,
+`id: str | None = None` (§3.1.2, §3.1.3), with `from_api()` and `to_api()`
+methods (§7). `value` is `None` on a model built by `from_api()`: the API
+stores values write-only and omits them from `GET`/`PUT` responses even
+though the OpenAPI schema marks `value` required. Callers still supply a
+non-blank `value` when constructing variables to write (§5.7).
 
 4.2. THE SYSTEM SHALL define `ScannerVariables` as a frozen dataclass with
 a single field `variables: list[ScannerVariable]`, with a `from_api()`

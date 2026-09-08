@@ -18,7 +18,7 @@ from veracode_dast.client import VeracodeClient
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--target-id", required=True, help="Existing API target's ID")
-    parser.add_argument("--spec-file", required=True, help="Local OpenAPI/Postman/HAR file")
+    parser.add_argument("--spec-file", required=True, help="Local OpenAPI JSON/YAML or HAR file")
     parser.add_argument("--download-to", required=True, help="Where to write the downloaded spec")
     args = parser.parse_args()
 

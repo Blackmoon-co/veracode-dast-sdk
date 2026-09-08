@@ -108,7 +108,7 @@ class ScannerVariable:
     """
 
     reference_key: str
-    value: str
+    value: str | None = None  # None on read-back: server stores it write-only
     totp_seed: bool = False
     is_inherited: bool = False
     id: str | None = None
@@ -128,7 +128,7 @@ class ScannerVariable:
         inner = data["effective_value"]
         return cls(
             reference_key=inner["reference_key"],
-            value=inner["value"],
+            value=inner.get("value"),  # absent on read-back (write-only)
             totp_seed=inner.get("evaluation_mode") == "TOTP",
             is_inherited=data["is_inherited"],
             id=inner.get("id"),
