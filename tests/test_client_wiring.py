@@ -3,6 +3,7 @@ import pytest
 from veracode_dast.client import VeracodeClient
 from veracode_dast.services.analysis_profiles import AnalysisProfilesService
 from veracode_dast.services.analysis_runs import AnalysisRunsService
+from veracode_dast.services.applications import ApplicationsService
 from veracode_dast.services.authentications import AuthenticationsService
 from veracode_dast.services.ism_gateways import IsmGatewaysService
 from veracode_dast.services.scanner_variables import ScannerVariablesService
@@ -24,6 +25,7 @@ def test_phase_2_services_share_targets_http_client_instance() -> None:
     assert isinstance(client.scanner_variables, ScannerVariablesService)
     assert isinstance(client.ism_gateways, IsmGatewaysService)
     assert isinstance(client.analysis_runs, AnalysisRunsService)
+    assert isinstance(client.applications, ApplicationsService)
 
     targets_http_client = client.targets._http_client
     assert client.analysis_profiles._http_client is targets_http_client
@@ -32,3 +34,4 @@ def test_phase_2_services_share_targets_http_client_instance() -> None:
     assert client.scanner_variables._http_client is targets_http_client
     assert client.ism_gateways._http_client is targets_http_client
     assert client.analysis_runs._http_client is targets_http_client
+    assert client.applications._http_client is targets_http_client

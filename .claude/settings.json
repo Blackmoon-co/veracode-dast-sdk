@@ -12,7 +12,17 @@
       "Bash(python -c \"import ast; ast.parse\\(open\\('examples/test_upload_replaces_bootstrap.py'\\).read\\(\\)\\); print\\('ok'\\)\")",
       "Bash(python -c \"import ast; ast.parse\\(open\\('examples/scan_api_with_local_openapi_example.py'\\).read\\(\\)\\); print\\('syntax ok'\\)\")",
       "Bash(python examples/scan_api_with_local_openapi_example.py --help)",
-      "Bash(grep -c '```' README.md)"
+      "Bash(grep -c '```' README.md)",
+      "Bash(cd \"c:/Users/User/OneDrive/Documents/GitHub/veracode-dast-sdk\" && mkdir -p specs/target-application-linking && ls specs/)",
+      "Bash(python -m ruff check .)",
+      "Bash(python -m pytest --version)",
+      "Bash(pip show *)",
+      "Bash(.venv/Scripts/ruff.exe --version)",
+      "Bash(.venv/Scripts/mypy.exe --version)",
+      "Bash(.venv/Scripts/python.exe --version)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\User\\OneDrive\\Documents\\GitHub\\veracode-dast-sdk\\specs"
     ]
   }
 }

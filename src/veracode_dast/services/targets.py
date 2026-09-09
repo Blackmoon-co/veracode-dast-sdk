@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 
 TARGET_CONFIGURATION_SERVICE_BASE_URL: Final = "https://api.veracode.com/dae/api/tcs-api/api/v1"
 _BASE_PATH: Final = "/targets"
+_LINK_PATH: Final = "/targets/{target_id}/link"
 
 logger = logging.getLogger(__name__)
 
@@ -225,6 +226,51 @@ class TargetsService:
         if existing is None:
             raise TargetNotFoundError(name)
         return self.update(existing.target_id, target)
+
+    def link(self, target_id: str, application_uuid: str) -> None:
+        """Links a Target to a Veracode Application.
+
+        Calls `PUT /targets/{target_id}/link`. The Target must be an
+        ENTERPRISE-scan Target; the SDK does not pre-check this, so a
+        `422` from the server propagates as `VeracodeValidationError`.
+        Linking an already-linked Target yields `409` →
+        `VeracodeConflictError`.
+
+        Args:
+            target_id: The target's unique identifier.
+            application_uuid: The application's UUID (`Application.guid`).
+
+        Raises:
+            TargetValidationError: If `target_id` or `application_uuid` is
+                blank.
+        """
+        self._require_non_blank(target_id, rule="target_id_required")
+        self._require_non_blank(application_uuid, rule="application_uuid_required")
+        self._http_client.put(
+            _LINK_PATH.format(target_id=target_id),
+            json={"application_uuid": application_uuid},
+        )
+        logger.info("Linked target %s to an application", target_id)
+
+    def unlink(self, target_id: str) -> None:
+        """Unlinks a Target from its Application.
+
+        Calls `DELETE /targets/{target_id}/link`.
+
+        Args:
+            target_id: The target's unique identifier.
+
+        Raises:
+            TargetValidationError: If `target_id` is blank.
+        """
+        self._require_non_blank(target_id, rule="target_id_required")
+        self._http_client.delete(_LINK_PATH.format(target_id=target_id))
+        logger.info("Unlinked target %s from its application", target_id)
+
+    @staticmethod
+    def _require_non_blank(value: str, *, rule: str) -> None:
+        if not value or not value.strip():
+            raise TargetValidationError("Value must not be blank", rule=rule)
 
     @staticmethod
     def _validate(

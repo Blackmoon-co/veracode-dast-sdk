@@ -8,7 +8,9 @@ from veracode_dast.exceptions import (
     TargetNotFoundError,
     TargetValidationError,
     VeracodeApiError,
+    VeracodeConflictError,
     VeracodeNotFoundError,
+    VeracodeValidationError,
 )
 from veracode_dast.models.target import Protocol, ScanType, TargetCreate, TargetType, TargetUpdate
 from veracode_dast.services.targets import TargetsService
@@ -332,3 +334,88 @@ def test_no_log_record_contains_business_data(caplog: pytest.LogCaptureFixture) 
     for record in caplog.records:
         message = record.getMessage()
         assert "secret-internal-host.example" not in message
+
+
+def test_link_sends_application_uuid_body() -> None:
+    stub = _StubHttpClient()
+    stub.queue(HttpResponse(204, None, {}))
+    service = TargetsService(stub)  # type: ignore[arg-type]
+
+    assert service.link("t-1", "app-uuid") is None
+    assert stub.calls[0]["verb"] == "PUT"
+    assert stub.calls[0]["path"] == "/targets/t-1/link"
+    assert stub.calls[0]["json"] == {"application_uuid": "app-uuid"}
+
+
+def test_link_blank_target_id_raises_without_call() -> None:
+    stub = _StubHttpClient()
+    service = TargetsService(stub)  # type: ignore[arg-type]
+
+    with pytest.raises(TargetValidationError) as excinfo:
+        service.link("  ", "app-uuid")
+    assert excinfo.value.rule == "target_id_required"
+    assert stub.calls == []
+
+
+def test_link_blank_application_uuid_raises_without_call() -> None:
+    stub = _StubHttpClient()
+    service = TargetsService(stub)  # type: ignore[arg-type]
+
+    with pytest.raises(TargetValidationError) as excinfo:
+        service.link("t-1", "")
+    assert excinfo.value.rule == "application_uuid_required"
+    assert stub.calls == []
+
+
+@pytest.mark.parametrize(
+    ("status", "exception"),
+    [
+        (404, VeracodeNotFoundError),
+        (409, VeracodeConflictError),
+        (422, VeracodeValidationError),
+    ],
+)
+def test_link_server_errors_propagate(
+    status: int, exception: type[VeracodeApiError]
+) -> None:
+    stub = _StubHttpClient()
+    stub.raise_next(exception("boom", method="PUT", url="x", status_code=status))
+    service = TargetsService(stub)  # type: ignore[arg-type]
+
+    with pytest.raises(exception):
+        service.link("t-1", "app-uuid")
+
+
+def test_unlink_sends_delete() -> None:
+    stub = _StubHttpClient()
+    stub.queue(HttpResponse(204, None, {}))
+    service = TargetsService(stub)  # type: ignore[arg-type]
+
+    assert service.unlink("t-1") is None
+    assert stub.calls[0]["verb"] == "DELETE"
+    assert stub.calls[0]["path"] == "/targets/t-1/link"
+
+
+def test_unlink_blank_target_id_raises_without_call() -> None:
+    stub = _StubHttpClient()
+    service = TargetsService(stub)  # type: ignore[arg-type]
+
+    with pytest.raises(TargetValidationError):
+        service.unlink("")
+    assert stub.calls == []
+
+
+def test_link_unlink_logs_do_not_contain_application_uuid(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    stub = _StubHttpClient()
+    stub.queue(HttpResponse(204, None, {}))
+    stub.queue(HttpResponse(204, None, {}))
+    service = TargetsService(stub)  # type: ignore[arg-type]
+
+    with caplog.at_level(logging.INFO):
+        service.link("t-1", "secret-app-uuid")
+        service.unlink("t-1")
+
+    for record in caplog.records:
+        assert "secret-app-uuid" not in record.getMessage()

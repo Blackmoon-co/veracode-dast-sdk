@@ -32,6 +32,7 @@ from veracode_dast.exceptions import (
 from veracode_dast.services.analysis_profiles import AnalysisProfilesService
 from veracode_dast.services.analysis_runs import AnalysisRunsService
 from veracode_dast.services.api_specifications import ApiSpecificationsService
+from veracode_dast.services.applications import ApplicationsService
 from veracode_dast.services.authentications import AuthenticationsService
 from veracode_dast.services.ism_gateways import IsmGatewaysService
 from veracode_dast.services.scanner_variables import ScannerVariablesService
@@ -329,3 +330,4 @@ class VeracodeClient:
         self.scanner_variables = ScannerVariablesService(tcs_http_client)
         self.ism_gateways = IsmGatewaysService(tcs_http_client)
         self.analysis_runs = AnalysisRunsService(tcs_http_client)
+        self.applications = ApplicationsService(tcs_http_client)
