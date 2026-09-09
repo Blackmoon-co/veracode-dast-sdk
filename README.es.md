@@ -7,10 +7,11 @@
 Un SDK de Python reutilizable para la API REST de [Veracode DAST](https://docs.veracode.com/r/DAST_Essentials_and_DAST_Advanced_API).
 
 > **Estado:** Fase 1 MVP (Autenticación, Cliente HTTP, Gestión de Equipos,
-> Gestión de Targets, Gestión de Especificaciones de API), Fase 2 (Perfiles
-> de Análisis, Perfiles de Scanner, Autenticaciones, Variables de Scanner,
-> Gateways ISM) y Fase 3 (Ejecuciones de Análisis) están implementadas. Ver
-> [AGENTS.md](AGENTS.md) para la visión, el alcance y el roadmap del proyecto.
+> Gestión de Targets, Vinculación de Aplicaciones, Gestión de
+> Especificaciones de API), Fase 2 (Perfiles de Análisis, Perfiles de
+> Scanner, Autenticaciones, Variables de Scanner, Gateways ISM) y Fase 3
+> (Ejecuciones de Análisis) están implementadas. Ver [AGENTS.md](AGENTS.md)
+> para la visión, el alcance y el roadmap del proyecto.
 
 ## Qué es esto
 
@@ -50,13 +51,18 @@ y expone un atributo por recurso encima de él:
 | --------------------------- | ---------------------------------- | -------------------------------------------------- |
 | `client.teams`               | Admin API                         | `https://api.veracode.com/api/authn/v2`           |
 | `client.targets`             | DAST Target Configuration Service | `https://api.veracode.com/dae/api/tcs-api/api/v1` |
+| `client.applications`        | DAST Target Configuration Service | `https://api.veracode.com/dae/api/tcs-api/api/v1` |
 | `client.api_specifications`  | DAST Target Configuration Service | `https://api.veracode.com/dae/api/tcs-api/api/v1` |
 
 - **Gestión de Equipos** (`client.teams`) — consulta de solo lectura, para
   resolver un nombre de equipo al `team_id` al que se asigna un Target.
 - **Gestión de Targets** (`client.targets`) — CRUD de Targets de DAST (la
   aplicación/API escaneada), más los helpers idempotentes
-  `ensure`/`update_by_name`/`exists` para pipelines.
+  `ensure`/`update_by_name`/`exists` para pipelines, y `link`/`unlink` para
+  vincular un Target a una Aplicación de Veracode.
+- **Resolución de Aplicaciones** (`client.applications`) — consulta de solo
+  lectura, para resolver un nombre de Aplicación al `guid` al que se vincula
+  un Target.
 - **Gestión de Especificaciones de API** (`client.api_specifications`) —
   sube, obtiene metadata y descarga el archivo OpenAPI (JSON/YAML) o HAR que
   respalda a un Target de tipo `API`. Las colecciones de Postman no se
@@ -157,6 +163,52 @@ La versión ejecutable es
 `end_to_end_workflow_example.py` hace lo mismo cuando se omite su flag
 `--spec-url`.
 
+### Vincular un Target a una Aplicación de Veracode
+
+Para importar los resultados de un escaneo DAST a una Aplicación de Veracode
+(el perfil creado del lado estático/SAST), resuelve la Aplicación por nombre
+y luego vincula el Target — el mismo flujo que usa DAST Essentials:
+
+```python
+from veracode_dast.exceptions import ApplicationNotFoundError
+
+# Resuelve primero — get_by_name lanza error si no hay coincidencia exacta y sensible a mayúsculas
+app = client.applications.get_by_name("My App")   # -> Application(guid=..., id=..., name=...)
+
+target = client.targets.ensure(TargetCreate(name="My API", scan_type=ScanType.ENTERPRISE, ...))
+
+client.targets.link(target.target_id, app.guid)   # PUT  /targets/{id}/link
+# client.targets.unlink(target.target_id)         # DELETE /targets/{id}/link
+```
+
+`client.applications.exists("My App")` es la forma que no lanza error
+(devuelve un `bool`); `list(name=...)` devuelve los resultados paginados
+crudos.
+
+En un pipeline, resuelve la Aplicación **antes** de crear el Target para que
+un nombre equivocado falle de inmediato sin aprovisionar nada:
+
+```python
+try:
+    app = client.applications.get_by_name(args.app_name)
+except ApplicationNotFoundError:
+    raise SystemExit(f"La aplicación {args.app_name!r} no existe")
+# ... solo ahora resuelve el equipo y haz ensure del target, luego link
+```
+
+Cosas a tener en cuenta:
+
+- **`link()` solo funciona con un Target de scan `ENTERPRISE`.** Un Target no
+  enterprise se rechaza del lado del servidor con `422` →
+  `VeracodeValidationError`; el SDK no pre-valida `scan_type`.
+- **`link()` no es idempotente.** Re-vincular un Target ya vinculado devuelve
+  `409` → `VeracodeConflictError`. Atrápalo y trátalo como "ya vinculado", o
+  haz `unlink()` primero.
+- La consulta usa el endpoint `/applications` del propio DAST Target
+  Configuration Service (misma base URL que `client.targets`), no la API de
+  Applications de AppSec. Devuelve `guid` / `id` / `name` — suficiente para
+  vincular — y nada más.
+
 ### Ejemplos de la Fase 1
 
 Scripts ejecutables en [examples/](examples/). Cada uno requiere
@@ -170,18 +222,24 @@ Scripts ejecutables en [examples/](examples/). Cada uno requiere
 | [`target_management_example.py`](examples/target_management_example.py) | Ciclo de vida completo del Target: `ensure` → `update_by_name` → `delete`. |
 | [`api_specification_management_example.py`](examples/api_specification_management_example.py) | Sube, obtiene metadata y descarga una Especificación de API de un Target existente. |
 | [`scan_api_with_local_openapi_example.py`](examples/scan_api_with_local_openapi_example.py) | Crea un target de API cuya URL real no sirve un OpenAPI, usando solo un archivo de spec local (URL bootstrap + `upload()`). |
-| [`end_to_end_workflow_example.py`](examples/end_to_end_workflow_example.py) | El flujo completo de la Fase 1 en un script: resolver un Equipo, `ensure`/actualizar un Target, subir su spec, leer la spec de vuelta — salida en JSON. |
+| [`application_linking_example.py`](examples/application_linking_example.py) | Resuelve una Aplicación por nombre (`exists` → `get_by_name`), y luego hace `link` / `unlink` de un Target existente hacia ella. |
+| [`end_to_end_workflow_example.py`](examples/end_to_end_workflow_example.py) | El flujo completo de la Fase 1 en un script: resolver un Equipo, `ensure`/actualizar un Target, subir su spec, leer la spec de vuelta — salida en JSON. Pasa `--app-name` para resolver y vincular una Aplicación primero. |
 
 ```bash
 python examples/end_to_end_workflow_example.py \
   --team-name "Development" --target-name "My API" \
   --target-url api.example.com --spec-file examples/sample-openapi.yaml \
-  --target-type API --scan-type ENTERPRISE
+  --target-type API --scan-type ENTERPRISE \
+  --app-name "My App"          # opcional: se resuelve antes del equipo; vincula el target tras crearlo
 
 # Target de API cuando la spec solo existe localmente (la URL real no sirve un OpenAPI):
 python examples/scan_api_with_local_openapi_example.py \
   --team-name "Development" --target-name "client-api-1" \
   --target-url api.client.com --spec-file ./client-openapi.json
+
+# Vincular un target ENTERPRISE existente a una Aplicación por nombre:
+python examples/application_linking_example.py \
+  --app-name "My App" --target-id <existing-target-id>
 ```
 
 ---

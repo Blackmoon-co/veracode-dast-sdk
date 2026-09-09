@@ -4,6 +4,10 @@ metadata) always runs. Phase 2 steps (Analysis Profile rate_limit/
 max_duration, Scanner Profiles, Authentications, Scanner Variables) are
 each optional and only run if their corresponding flag is passed.
 
+Pass --app-name to resolve a Veracode Application by name *before* the
+Team (the script exits without creating anything if it doesn't exist) and
+link the Target to it after creation.
+
 Veracode fetches api_specification_file_url synchronously while creating an
 API target, so it must be a real, reachable OpenAPI URL - a fabricated one
 makes the origin return 502. If you only have a local file, leave
@@ -16,6 +20,7 @@ Usage:
     python examples/end_to_end_workflow_example.py \\
         --team-name "Development" --target-name "My API" --target-url api.example.com \\
         --spec-file examples/sample-openapi.yaml \\
+        --app-name "My App" \\
         --scanner-config specs/scanners-profiles/scanner-profile.json \\
         --auth-config specs/authentications/authentication.json \\
         --scanner-variables-config specs/scanner-variables/scanner-variables.json \\
@@ -30,7 +35,7 @@ import time
 from typing import Any
 
 from veracode_dast.client import VeracodeClient
-from veracode_dast.exceptions import VeracodeApiError
+from veracode_dast.exceptions import ApplicationNotFoundError, VeracodeApiError
 from veracode_dast.models.analysis_profile import AnalysisProfile, AnalysisProfileUpdate
 from veracode_dast.models.target import (
     Protocol,
@@ -39,7 +44,6 @@ from veracode_dast.models.target import (
     TargetType,
     TargetUpdate,
 )
-
 
 # A public OpenAPI Veracode can always GET, used to satisfy target creation
 # when the caller has no hosted spec of their own. Replaced by --spec-file.
@@ -93,9 +97,25 @@ def main() -> None:
     )
     parser.add_argument("--rate-limit", type=int, default=None)
     parser.add_argument("--max-duration", type=int, default=None)
+    parser.add_argument(
+        "--app-name",
+        default=None,
+        help="Link the Target to this Veracode Application after creation. "
+        "Resolved before the Team is; if no Application has this exact name, "
+        "the script exits without creating a Target.",
+    )
     args = parser.parse_args()
 
     client = VeracodeClient()
+
+    # --- Application (resolved first, before Team/Target) ---
+    app = None
+    if args.app_name:
+        try:
+            app = client.applications.get_by_name(args.app_name)
+        except ApplicationNotFoundError as exc:
+            sys.exit(f"{exc}; not creating a target")
+        print(json.dumps({"application_guid": app.guid, "application_name": app.name}, indent=2))
 
     # --- Phase 1: Team, Target, API Specification ---
     team = client.teams.get_by_name(args.team_name)
@@ -126,6 +146,10 @@ def main() -> None:
         ),
     )
     print(json.dumps(dataclasses.asdict(target), indent=2))
+
+    if app is not None:
+        client.targets.link(target.target_id, app.guid)
+        print(f"Linked target {target.target_id} to application {app.guid}")
 
     client.api_specifications.upload(target.target_id, args.spec_file)
     spec = client.api_specifications.get(target.target_id)

@@ -179,6 +179,26 @@ class TargetNotFoundError(VeracodeSDKError):
         super().__init__(f"No target found with name: {name}")
 
 
+class ApplicationNotFoundError(VeracodeSDKError):
+    """Raised when no Application matches a `get_by_name` lookup.
+
+    Not a subclass of `VeracodeApiError`: the `GET /applications` call it
+    follows returned 200 — there was no failed request.
+
+    Attributes:
+        name: The application name that was searched for.
+    """
+
+    def __init__(self, name: str) -> None:
+        """Initializes the error.
+
+        Args:
+            name: The application name that was searched for.
+        """
+        self.name = name
+        super().__init__(f"No application found with name: {name}")
+
+
 class ApiSpecificationValidationError(VeracodeSDKError):
     """Raised for SDK-level API Specification parameter validation failures.
 
