@@ -299,13 +299,13 @@ def test_remove_blank_id_raises_without_http_call() -> None:
     assert stub.calls == []
 
 
-def test_remove_success_sends_empty_body() -> None:
+def test_remove_success_sends_null_uuids() -> None:
     stub = _StubHttpClient()
     stub.queue(HttpResponse(200, {}, {}))
     service = IsmGatewaysService(stub)  # type: ignore[arg-type]
 
     assert service.remove("t-1") is None
-    assert stub.calls[0]["json"] == {}
+    assert stub.calls[0]["json"] == {"gatewayUuid": None, "endpointUuid": None}
 
 
 def test_remove_not_found_propagates() -> None:

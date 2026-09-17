@@ -4,10 +4,13 @@ resource."""
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
 from veracode_dast.models.target import Protocol, TargetStatus
+
+_TIMEOUT_HEURISTIC_TOLERANCE = 0.95
 
 
 class AnalysisRunScanType(StrEnum):
@@ -127,6 +130,47 @@ class AnalysisRun:
                 ResultImportStatus(result_import_status) if result_import_status else None
             ),
         )
+
+    def duration_seconds(self) -> float | None:
+        """Wall-clock time this run took, once finished.
+
+        Veracode's API never reports this directly — only `started_at`/
+        `finished_at` timestamps. Derived, not fetched.
+
+        Returns:
+            `finished_at - started_at` in seconds, or `None` if the run
+            hasn't finished yet.
+        """
+        if self.finished_at is None:
+            return None
+        started = datetime.fromisoformat(self.started_at)
+        finished = datetime.fromisoformat(self.finished_at)
+        return (finished - started).total_seconds()
+
+    def likely_timed_out(self) -> bool | None:
+        """Guesses whether a `FAILED` run failed by hitting its own
+        configured time limit, rather than e.g. bad credentials or an
+        unreachable target.
+
+        Veracode's API reports no failure reason — only the terminal
+        `status`. This is a heuristic inferred from timing, not a fact
+        from the API: it compares actual `duration_seconds()` against
+        `max(max_duration, max_crawl_duration)` (both in minutes) with a
+        5% tolerance for the run's own bookkeeping/shutdown overhead. A
+        run that failed near its configured limit probably ran out of
+        time; one that failed much sooner almost certainly failed for
+        another reason.
+
+        Returns:
+            `None` if `status` isn't `FAILED` or the run hasn't finished
+            yet (nothing to compare). Otherwise `True`/`False` per the
+            heuristic above.
+        """
+        duration = self.duration_seconds()
+        if self.status is not TargetStatus.FAILED or duration is None:
+            return None
+        configured_limit_seconds = max(self.max_duration, self.max_crawl_duration) * 60
+        return duration >= configured_limit_seconds * _TIMEOUT_HEURISTIC_TOLERANCE
 
 
 @dataclass(frozen=True)

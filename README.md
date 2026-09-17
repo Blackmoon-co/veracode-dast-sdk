@@ -346,6 +346,14 @@ supply the *values* that login references.
 `analysis_profile_id` — resolve it via `client.analysis_profiles.get(analysis_profile_id).target_id`,
 or use the `target_id` already returned by `client.targets.ensure(...)`.
 
+**`ism_gateways.remove()` sends explicit `null`s, not an empty body.** A live
+account rejected `PUT /ism_gateways/targets/{target_id}` with `json={}`
+(`VeracodeApiError`) when clearing a gateway assignment. Fixed to send
+`{"gatewayUuid": null, "endpointUuid": null}` instead — the same convention
+this SDK uses elsewhere to clear a field (see `AnalysisProfileUpdate.to_api`).
+This fix hasn't been re-verified against a live account yet; if `remove()`
+still fails after upgrading, please report the new error.
+
 **Not every scanner is editable.** Which scanners a Target exposes, and
 whether each can be changed, depends on its `scan_type`/`target_type` —
 confirmed live against two accounts:
@@ -428,6 +436,45 @@ client.analysis_runs.stop(target.target_id, action=StopActionType.STOP_SAVE)
 `action` defaults to `StopActionType.STOP_DELETE` and also accepts a plain
 string (`action="STOP_SAVE"`), validated the same way as `get_report()`'s
 `format`.
+
+### Diagnosing a failed or slow scan
+
+Veracode's API reports no failure reason for an Analysis Run — only the
+`status` enum (`RUNNING, STOPPING, STOPPED, FINISHED, FAILED`) and the
+`started_at`/`finished_at` timestamps. There's no `progress` percentage and
+no error message anywhere in the API response, so a CI/CD pipeline has to
+infer the rest:
+
+- **`AnalysisRunTimeoutError` vs. a `FAILED` status are different things.**
+  `wait_for_completion(..., timeout=...)` raises `AnalysisRunTimeoutError`
+  when the *SDK* gives up polling — the scan may still be running on
+  Veracode's side. A `FAILED` status is Veracode's own terminal state,
+  returned normally (not raised) by `wait_for_completion()`; check
+  `finished.status` after it returns.
+- **`finished.likely_timed_out()`** is a heuristic, not a fact from the
+  API: it compares actual `duration_seconds()` against the run's own
+  `max_duration`/`max_crawl_duration` limit (within 5%). Returns `None`
+  unless `status` is `FAILED` and the run has finished; otherwise `True`
+  suggests the scan ran out of its configured time, `False` suggests it
+  failed early for another reason (bad credentials, unreachable target,
+  invalid scan configuration, ...).
+- **A `FINISHED` scan can still have failed to report results.** Check
+  `finished.result_import_status` — `FAILED`/`ERROR`/`INVALID` mean the
+  scan itself completed but its results never made it into the linked
+  Application.
+
+```python
+finished = client.analysis_runs.wait_for_completion(
+    target.target_id, run.analysis_run_id, timeout=3600
+)
+if finished.status == TargetStatus.FAILED:
+    hint = "likely hit its time limit" if finished.likely_timed_out() else "failed early"
+    print(f"Scan failed ({hint}); ran for {finished.duration_seconds()}s")
+elif finished.result_import_status in (
+    ResultImportStatus.FAILED, ResultImportStatus.ERROR, ResultImportStatus.INVALID
+):
+    print(f"Scan finished but results didn't import: {finished.result_import_status}")
+```
 
 ### Phase 3 examples
 

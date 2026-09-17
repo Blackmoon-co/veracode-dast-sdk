@@ -11,13 +11,17 @@ themselves, e.g. `client.analysis_profiles.get(analysis_profile_id).target_id`.
 Callers configure a gateway by human-readable name; this service resolves
 the name to the `gatewayUuid`/`endpointUuid` pair the REST API requires.
 
-Two assumptions here are inferred from an underspecified OpenAPI schema,
+One assumption here is inferred from an underspecified OpenAPI schema,
 not confirmed by a documented example, and should be validated against a
 live/sandbox Veracode account: `IsmEndpoint.token` is used as the
-endpoint identifier (`endpointUuid`), and an empty-body `PUT` is used to
-clear a gateway assignment (`remove()`). If either proves wrong, only
-`_select_endpoint`/`remove()` need to change — no public interface is
-affected.
+endpoint identifier (`endpointUuid`). If it proves wrong, only
+`_select_endpoint` needs to change — no public interface is affected.
+
+`remove()` sends explicit `null`s for `gatewayUuid`/`endpointUuid` rather
+than an empty body: a live account rejected `PUT .../targets/{id}` with
+`json={}`, matching this SDK's convention elsewhere (e.g.
+`AnalysisProfileUpdate.to_api`) of sending `null` to clear a field rather
+than omitting it.
 """
 
 from __future__ import annotations
@@ -266,7 +270,10 @@ class IsmGatewaysService:
         """
         self._require_non_blank(target_id, rule="target_id_required")
         logger.info("Removing ISM gateway assignment from target %s", target_id)
-        self._http_client.put(_TARGET_ISM_GATEWAY_PATH.format(target_id=target_id), json={})
+        self._http_client.put(
+            _TARGET_ISM_GATEWAY_PATH.format(target_id=target_id),
+            json={"gatewayUuid": None, "endpointUuid": None},
+        )
         logger.info("Removed ISM gateway assignment from target %s", target_id)
 
     @staticmethod

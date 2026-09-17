@@ -79,6 +79,52 @@ def test_analysis_run_from_api_reads_optional_fields() -> None:
     assert run.result_import_status == ResultImportStatus.COMPLETED
 
 
+def test_duration_seconds_is_none_when_not_finished() -> None:
+    run = AnalysisRun.from_api(_analysis_run_api_fixture())
+
+    assert run.duration_seconds() is None
+
+
+def test_duration_seconds_computed_from_timestamps() -> None:
+    run = AnalysisRun.from_api(
+        _analysis_run_api_fixture(finished_at="2026-08-11T11:00:00Z")
+    )
+
+    assert run.duration_seconds() == 3600.0
+
+
+def test_likely_timed_out_is_none_when_not_failed() -> None:
+    run = AnalysisRun.from_api(
+        _analysis_run_api_fixture(finished_at="2026-08-11T11:00:00Z", status="FINISHED")
+    )
+
+    assert run.likely_timed_out() is None
+
+
+def test_likely_timed_out_is_none_when_not_finished() -> None:
+    run = AnalysisRun.from_api(_analysis_run_api_fixture(status="FAILED"))
+
+    assert run.likely_timed_out() is None
+
+
+def test_likely_timed_out_true_near_configured_limit() -> None:
+    # max_duration=14400 minutes (240 hours); failing 10 days in is within
+    # the 5% tolerance of that limit.
+    run = AnalysisRun.from_api(
+        _analysis_run_api_fixture(finished_at="2026-08-21T10:00:00Z", status="FAILED")
+    )
+
+    assert run.likely_timed_out() is True
+
+
+def test_likely_timed_out_false_when_failed_early() -> None:
+    run = AnalysisRun.from_api(
+        _analysis_run_api_fixture(finished_at="2026-08-11T10:05:00Z", status="FAILED")
+    )
+
+    assert run.likely_timed_out() is False
+
+
 def test_analysis_run_page_from_api_round_trips_and_hides_links() -> None:
     data = {
         "_embedded": {"analysis_runs": [_analysis_run_api_fixture()]},

@@ -7,7 +7,8 @@ Requires VERACODE_API_KEY_ID and VERACODE_API_KEY_SECRET to be set.
 import argparse
 
 from veracode_dast.client import VeracodeClient
-from veracode_dast.models.analysis_run import StopActionType
+from veracode_dast.models.analysis_run import ResultImportStatus, StopActionType
+from veracode_dast.models.target import TargetStatus
 
 _DESCRIPTION = "Start, monitor, stop, and download reports for Veracode DAST Analysis Runs."
 
@@ -137,6 +138,16 @@ def main() -> None:
         timeout=args.timeout,
     )
     print(f"\nFinal Status:\n{finished.status}")
+
+    if finished.status == TargetStatus.FAILED:
+        hint = "likely hit its time limit" if finished.likely_timed_out() else "failed early"
+        print(f"Duration: {finished.duration_seconds()}s ({hint})")
+    elif finished.result_import_status in (
+        ResultImportStatus.FAILED,
+        ResultImportStatus.ERROR,
+        ResultImportStatus.INVALID,
+    ):
+        print(f"Scan finished but results didn't import: {finished.result_import_status}")
 
     if args.report:
         _section("Report")
