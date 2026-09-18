@@ -363,6 +363,15 @@ referencia.
 `client.analysis_profiles.get(analysis_profile_id).target_id`, o usa el
 `target_id` que ya devuelve `client.targets.ensure(...)`.
 
+**`ism_gateways.remove()` manda `null` explícito, no un body vacío.** Una
+cuenta real rechazó `PUT /ism_gateways/targets/{target_id}` con `json={}`
+(`VeracodeApiError`) al intentar quitar la asignación de un gateway. Se
+corrigió para mandar `{"gatewayUuid": null, "endpointUuid": null}` — la
+misma convención que usa el resto del SDK para limpiar un campo (ver
+`AnalysisProfileUpdate.to_api`). Este fix todavía no fue re-verificado
+contra una cuenta en vivo; si `remove()` sigue fallando después de
+actualizar, por favor reportá el nuevo error.
+
 **No todos los scanners son editables.** Qué scanners expone un Target, y si
 cada uno se puede cambiar, depende de su `scan_type`/`target_type` —
 confirmado en vivo contra dos cuentas:
@@ -447,6 +456,45 @@ client.analysis_runs.stop(target.target_id, action=StopActionType.STOP_SAVE)
 `action` por defecto es `StopActionType.STOP_DELETE` y también acepta un
 string plano (`action="STOP_SAVE"`), validado igual que el `format` de
 `get_report()`.
+
+### Diagnosticar un escaneo fallido o lento
+
+La API de Veracode no reporta motivo de fallo para un Analysis Run — solo
+el enum `status` (`RUNNING, STOPPING, STOPPED, FINISHED, FAILED`) y los
+timestamps `started_at`/`finished_at`. No hay porcentaje de `progress` ni
+mensaje de error en ninguna parte de la respuesta, así que un pipeline de
+CI/CD tiene que inferir el resto:
+
+- **`AnalysisRunTimeoutError` y un status `FAILED` son cosas distintas.**
+  `wait_for_completion(..., timeout=...)` lanza `AnalysisRunTimeoutError`
+  cuando el *SDK* deja de hacer polling — el escaneo puede seguir corriendo
+  del lado de Veracode. Un status `FAILED` es el estado terminal propio de
+  Veracode, devuelto normalmente (no lanzado) por `wait_for_completion()`;
+  revisá `finished.status` después de que retorne.
+- **`finished.likely_timed_out()`** es una heurística, no un hecho de la
+  API: compara `duration_seconds()` real contra el límite propio del run
+  (`max_duration`/`max_crawl_duration`, con 5% de tolerancia). Devuelve
+  `None` salvo que `status` sea `FAILED` y el run haya terminado; si no,
+  `True` sugiere que el escaneo se quedó sin su tiempo configurado, `False`
+  sugiere que falló temprano por otra causa (credenciales inválidas, target
+  inalcanzable, configuración de escaneo inválida, ...).
+- **Un escaneo `FINISHED` puede haber fallado igual al importar
+  resultados.** Revisá `finished.result_import_status` — `FAILED`/`ERROR`/
+  `INVALID` significan que el escaneo en sí terminó, pero sus resultados
+  nunca llegaron a la Application vinculada.
+
+```python
+finished = client.analysis_runs.wait_for_completion(
+    target.target_id, run.analysis_run_id, timeout=3600
+)
+if finished.status == TargetStatus.FAILED:
+    hint = "probablemente llegó a su límite de tiempo" if finished.likely_timed_out() else "falló temprano"
+    print(f"Escaneo falló ({hint}); corrió {finished.duration_seconds()}s")
+elif finished.result_import_status in (
+    ResultImportStatus.FAILED, ResultImportStatus.ERROR, ResultImportStatus.INVALID
+):
+    print(f"Escaneo terminó pero los resultados no se importaron: {finished.result_import_status}")
+```
 
 ### Ejemplos de la Fase 3
 
