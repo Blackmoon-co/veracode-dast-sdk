@@ -363,14 +363,25 @@ referencia.
 `client.analysis_profiles.get(analysis_profile_id).target_id`, o usa el
 `target_id` que ya devuelve `client.targets.ensure(...)`.
 
-**`ism_gateways.remove()` manda `null` explícito, no un body vacío.** Una
-cuenta real rechazó `PUT /ism_gateways/targets/{target_id}` con `json={}`
-(`VeracodeApiError`) al intentar quitar la asignación de un gateway. Se
-corrigió para mandar `{"gatewayUuid": null, "endpointUuid": null}` — la
-misma convención que usa el resto del SDK para limpiar un campo (ver
-`AnalysisProfileUpdate.to_api`). Este fix todavía no fue re-verificado
-contra una cuenta en vivo; si `remove()` sigue fallando después de
-actualizar, por favor reportá el nuevo error.
+**El body correcto para `ism_gateways.remove()` todavía no se sabe.** Una
+cuenta real rechazó `PUT /ism_gateways/targets/{target_id}` con body vacío
+(`json={}`, HTTP 400). Mandar `null` explícito en su lugar
+(`{"gatewayUuid": null, "endpointUuid": null}` — la convención que usa el
+resto del SDK para limpiar un campo, ver `AnalysisProfileUpdate.to_api`)
+también fue rechazado con HTTP 400. Ninguna de las dos versiones del SDK
+mostró el `detail` real que devuelve Veracode, así que la causa real sigue
+sin confirmarse. Los mensajes de excepción ahora incluyen el body de la
+respuesta (ver abajo) — el próximo fallo lo va a mostrar. Hasta entonces,
+tratá `remove()` como roto; usá `client.ism_gateways.update(...)` para
+cambiar la asignación de gateway, que sí funciona.
+
+**`VeracodeApiError` ahora incluye el body de la respuesta en su
+mensaje.** Antes, una request fallida solo reportaba `METHOD URL failed
+with status N`, ocultando el `detail`/`errors` que devolvía Veracode — la
+información exacta que hacía falta para diagnosticar fallos como el de
+arriba. El mensaje ahora agrega `: <body>` (truncado a 500 caracteres)
+cuando la respuesta trae uno; `err.response_body` sigue teniendo el valor
+completo parseado para uso programático.
 
 **No todos los scanners son editables.** Qué scanners expone un Target, y si
 cada uno se puede cambiar, depende de su `scan_type`/`target_type` —

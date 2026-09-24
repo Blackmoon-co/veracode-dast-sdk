@@ -8,6 +8,7 @@ this module never imports ``auth.py``/``config.py``.
 
 from __future__ import annotations
 
+import json
 import logging
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -53,6 +54,29 @@ _STATUS_EXCEPTIONS: Final[dict[int, type[VeracodeApiError]]] = {
     409: VeracodeConflictError,
     422: VeracodeValidationError,
 }
+_ERROR_DETAIL_MAX_CHARS: Final = 500
+
+
+def _format_error_detail(body: dict[str, Any] | list[Any] | str | None) -> str:
+    """Formats an error response body for inclusion in an exception message.
+
+    Veracode error responses (e.g. the `Problem` schema) carry the actual
+    reason for a failure — `detail`, `errors`, etc. — that's otherwise only
+    reachable via `VeracodeApiError.response_body`, invisible in a plain
+    traceback/log line. This surfaces it there too.
+
+    Args:
+        body: The parsed (or raw) response body, if any.
+
+    Returns:
+        `": <body>"` (truncated), or `""` if there's no body to show.
+    """
+    if body is None:
+        return ""
+    text = json.dumps(body) if isinstance(body, (dict, list)) else str(body)
+    if len(text) > _ERROR_DETAIL_MAX_CHARS:
+        text = text[:_ERROR_DETAIL_MAX_CHARS] + "..."
+    return f": {text}"
 
 
 @dataclass(frozen=True)
@@ -277,7 +301,8 @@ class HttpClient:
                 "HTTP %s %s failed: %s", method, url, exception_cls.__name__
             )
             raise exception_cls(
-                f"{method} {url} failed with status {response.status_code}",
+                f"{method} {url} failed with status {response.status_code}"
+                f"{_format_error_detail(body)}",
                 method=method,
                 url=url,
                 status_code=response.status_code,

@@ -225,6 +225,24 @@ def test_unmapped_status_codes_raise_base_api_error(status_code: int) -> None:
     assert exc_info.value.status_code == status_code
 
 
+def test_error_message_includes_response_body_detail() -> None:
+    client = _client()
+    client._session.request = _RecordingRequest(  # type: ignore[method-assign]
+        response=_make_response(400, json_body={"detail": "gatewayUuid must not be null"})
+    )
+    with pytest.raises(VeracodeApiError) as exc_info:
+        client.get("/x")
+    assert "gatewayUuid must not be null" in str(exc_info.value)
+
+
+def test_error_message_omits_detail_when_no_body() -> None:
+    client = _client()
+    client._session.request = _RecordingRequest(response=_make_response(400))  # type: ignore[method-assign]
+    with pytest.raises(VeracodeApiError) as exc_info:
+        client.get("/x")
+    assert str(exc_info.value) == "GET https://api.example.com/v1/x failed with status 400"
+
+
 def test_connection_error_raises_veracode_connection_error() -> None:
     client = _client()
     client._session.request = _RecordingRequest(  # type: ignore[method-assign]

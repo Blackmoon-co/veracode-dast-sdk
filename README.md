@@ -346,13 +346,24 @@ supply the *values* that login references.
 `analysis_profile_id` — resolve it via `client.analysis_profiles.get(analysis_profile_id).target_id`,
 or use the `target_id` already returned by `client.targets.ensure(...)`.
 
-**`ism_gateways.remove()` sends explicit `null`s, not an empty body.** A live
-account rejected `PUT /ism_gateways/targets/{target_id}` with `json={}`
-(`VeracodeApiError`) when clearing a gateway assignment. Fixed to send
-`{"gatewayUuid": null, "endpointUuid": null}` instead — the same convention
-this SDK uses elsewhere to clear a field (see `AnalysisProfileUpdate.to_api`).
-This fix hasn't been re-verified against a live account yet; if `remove()`
-still fails after upgrading, please report the new error.
+**`ism_gateways.remove()`'s request body is still unconfirmed.** A live
+account rejected `PUT /ism_gateways/targets/{target_id}` with an empty body
+(`json={}`, HTTP 400). Sending explicit `null`s instead
+(`{"gatewayUuid": null, "endpointUuid": null}` — this SDK's usual convention
+for clearing a field, see `AnalysisProfileUpdate.to_api`) was **also**
+rejected with HTTP 400. Every SDK version through this one has raised the
+error without showing Veracode's actual `detail` message, so the true cause
+is still unknown. Exception messages now include the response body (see
+below) — the next failure will show it. Until then, `remove()` should be
+treated as broken; use `client.ism_gateways.update(...)` to change a
+gateway assignment, which works.
+
+**`VeracodeApiError` now includes the response body in its message.**
+Previously a failed request only reported `METHOD URL failed with status
+N`, hiding whatever `detail`/`errors` Veracode returned — the exact
+information needed to diagnose failures like the one above. The message
+now appends `: <body>` (truncated to 500 chars) when the response has one;
+`err.response_body` still holds the full parsed value for programmatic use.
 
 **Not every scanner is editable.** Which scanners a Target exposes, and
 whether each can be changed, depends on its `scan_type`/`target_type` —

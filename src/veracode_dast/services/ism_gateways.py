@@ -17,11 +17,15 @@ live/sandbox Veracode account: `IsmEndpoint.token` is used as the
 endpoint identifier (`endpointUuid`). If it proves wrong, only
 `_select_endpoint` needs to change — no public interface is affected.
 
-`remove()` sends explicit `null`s for `gatewayUuid`/`endpointUuid` rather
-than an empty body: a live account rejected `PUT .../targets/{id}` with
-`json={}`, matching this SDK's convention elsewhere (e.g.
-`AnalysisProfileUpdate.to_api`) of sending `null` to clear a field rather
-than omitting it.
+`remove()`'s request body is still unconfirmed. A live account rejected
+`PUT .../targets/{id}` with `json={}` (HTTP 400); sending explicit `null`s
+for `gatewayUuid`/`endpointUuid` instead — this SDK's convention elsewhere
+(e.g. `AnalysisProfileUpdate.to_api`) for clearing a field — was *also*
+rejected with HTTP 400. Neither attempt's error `detail` was visible at
+the time (see `HttpClient._format_error_detail`, added specifically so
+the next failure shows Veracode's actual reason instead of a bare status
+code). Until that detail is captured from a live run, treat `remove()` as
+unverified.
 """
 
 from __future__ import annotations
