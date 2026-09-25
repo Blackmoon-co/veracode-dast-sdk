@@ -412,7 +412,7 @@ Scripts ejecutables en [examples/](examples/). Cada uno requiere
 | [`scanner_profiles_example.py`](examples/scanner_profiles_example.py) | Obtiene, y luego actualiza, los scanners habilitados de un Perfil de Análisis desde un archivo de Configuración del SDK. |
 | [`authentications_example.py`](examples/authentications_example.py) | Obtiene la configuración efectiva de Autenticación, y luego configura un mecanismo desde un archivo de Configuración del SDK. |
 | [`scanner_variables_example.py`](examples/scanner_variables_example.py) | Obtiene, y luego reemplaza, las Variables de Scanner de un Perfil de Análisis desde un archivo de Configuración del SDK. |
-| [`ism_gateway_example.py`](examples/ism_gateway_example.py) | Lista los Gateways ISM disponibles, asigna uno a un Target por nombre, y luego quita la asignación. |
+| [`ism_gateway_example.py`](examples/ism_gateway_example.py) | Lista los Gateways ISM disponibles, asigna uno a un Target por nombre. Pasá `--remove` para también llamar a `remove()` (no verificado — ver nota arriba). |
 
 ---
 
